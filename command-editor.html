@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>指令資料庫編輯器</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #020617;
+      color: #f9fafb;
+    }
+    h1 {
+      font-size: 20px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 16px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 12px;
+    }
+    h2 {
+      font-size: 16px;
+      margin: 0 0 6px;
+    }
+    textarea, input, select {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 14px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #f9fafb;
+    }
+    button {
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: none;
+      background: #22c55e;
+      color: #022c22;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+      align-items: center;
+    }
+    .list {
+      margin-top: 6px;
+      max-height: 260px;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    .item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 4px 0;
+      border-bottom: 1px solid #111827;
+    }
+    .item-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .item-text {
+      white-space: pre-wrap;
+    }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      color: #e5e7eb;
+    }
+    .badge-self {
+      border-color: #22c55e;
+      color: #bbf7d0;
+    }
+    .badge-interact {
+      border-color: #38bdf8;
+      color: #bae6fd;
+    }
+    .badge-level-A {
+      border-color: #22c55e;
+      color: #bbf7d0;
+    }
+    .badge-level-B {
+      border-color: #eab308;
+      color: #fef9c3;
+    }
+    .badge-level-C {
+      border-color: #f97316;
+      color: #ffedd5;
+    }
+    .item-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .btn-small {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    .btn-danger {
+      background: #ef4444;
+      color: #fef2f2;
+    }
+    .btn-secondary {
+      background: #4b5563;
+      color: #e5e7eb;
+    }
+    .hint {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+    .footer {
+      font-size: 11px;
+      color: #6b7280;
+      text-align: center;
+      margin-top: 8px;
+    }
+    .json-area {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      min-height: 80px;
+    }
+    .edit-input {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 13px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #f9fafb;
+      margin-top: 4px;
+    }
+    .edit-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+      align-items: center;
+    }
+    .edit-label {
+      font-size: 11px;
+      color: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <h1>派對遊戲 指令資料庫</h1>
+  <div class="subtitle">編輯一般格 / 特別格指令，會存到瀏覽器（localStorage）</div>
+
+  <div class="container">
+    <section class="card">
+      <h2>一般格指令</h2>
+      <div class="hint">
+        類型：
+        <strong>自行完成</strong>（抽到的人自己做）、
+        <strong>互動完成</strong>（會自動帶入 [A]/[B] 做互動）。<br>
+        等級：A / B / C（遊戲格子前 40% 用 A，40% 用 B，最後 20% 用 C）。<br>
+        可以使用 [A] / [B] 當人名變數，例如： [A] 跟 [B] 握手 10 秒。
+      </div>
+      <textarea id="normal-input" rows="2" placeholder="輸入一條一般格指令..."></textarea>
+      <div class="row">
+        <label style="font-size:12px; color:#e5e7eb; display:flex; align-items:center; gap:4px;">
+          類型：
+          <select id="normal-type">
+            <option value="self">自行完成（自己做）</option>
+            <option value="interaction">互動完成（跟別人互動）</option>
+          </select>
+        </label>
+        <label style="font-size:12px; color:#e5e7eb; display:flex; align-items:center; gap:4px;">
+          等級：
+          <select id="normal-level">
+            <option value="A">A（最前面）</option>
+            <option value="B">B（中段）</option>
+            <option value="C">C（最後段）</option>
+          </select>
+        </label>
+        <button id="btn-add-normal">加入一般格</button>
+      </div>
+      <div id="normal-list" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>特別格指令</h2>
+      <div class="hint">
+        會在踩到特別格時顯示，例如： 幸運格：你往前多走 1 格。<br>
+        可以設定等級 A / B / C，會跟目前所在格子區段對應。
+      </div>
+      <textarea id="special-input" rows="2" placeholder="輸入一條特別格指令..."></textarea>
+      <div class="row">
+        <label style="font-size:12px; color:#e5e7eb; display:flex; align-items:center; gap:4px;">
+          等級：
+          <select id="special-level">
+            <option value="A">A（最前面）</option>
+            <option value="B">B（中段）</option>
+            <option value="C">C（最後段）</option>
+          </select>
+        </label>
+        <button id="btn-add-special">加入特別格</button>
+      </div>
+      <div id="special-list" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h2>匯入 / 匯出 JSON</h2>
+      <div class="hint">結構：{ normal: { text, kind, level }[], special: { text, level }[] }</div>
+      <textarea id="json-area" class="json-area" placeholder="點「匯出」會把目前資料顯示在這裡；要匯入時把 JSON 貼在這裡再按匯入。"></textarea>
+      <div class="row">
+        <button id="btn-export">匯出目前資料</button>
+        <button id="btn-import">從上方 JSON 匯入</button>
+        <button id="btn-clear" style="background:#ef4444;color:#fef2f2;">清空資料庫</button>
+      </div>
+    </section>
+
+    <div class="footer">
+      資料會存到瀏覽器的 localStorage（partyGameCommandDB），遊戲頁面會自動讀取這個資料庫。
+    </div>
+  </div>
+
+  <script src="command-editor.js"></script>
+</body>
+</html>

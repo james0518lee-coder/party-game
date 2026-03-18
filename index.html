@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>派對飛行棋</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 0;
+      background:
+        radial-gradient(circle at top, rgba(248,250,252,0.06) 0, transparent 55%),
+        radial-gradient(circle at bottom, rgba(56,189,248,0.12) 0, transparent 60%),
+        #020617;
+      color: #f9fafb;
+    }
+    .app-shell {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px 16px 24px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(236,72,153,0.24));
+      box-shadow: 0 18px 45px rgba(15,23,42,0.65);
+      border: 1px solid rgba(148,163,184,0.4);
+    }
+    header .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    h1 {
+      font-size: 22px;
+      margin: 0;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #e5e7eb;
+      opacity: 0.9;
+    }
+    .badge-beta {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.84);
+      border: 1px solid rgba(251,191,36,0.9);
+      color: #fef9c3;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .section {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin: 8px 0 4px;
+      font-size: 14px;
+    }
+    input, select, button {
+      font-size: 16px;
+    }
+    input, select {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: rgba(15,23,42,0.9);
+      color: #f9fafb;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+    input:focus, select:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.7);
+      background: #020617;
+    }
+    button {
+      font-size: 14px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: none;
+      background: radial-gradient(circle at top, #4ade80, #22c55e);
+      color: #022c22;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(22,163,74,0.55);
+      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, filter 0.12s ease-out;
+    }
+    button:hover:enabled {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+      box-shadow: 0 16px 40px rgba(22,163,74,0.75);
+    }
+    button:active:enabled {
+      transform: translateY(0px) scale(0.98);
+      box-shadow: 0 6px 14px rgba(22,163,74,0.65);
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: default;
+      box-shadow: none;
+    }
+    .btn-secondary {
+      background: linear-gradient(135deg, #4b5563, #111827);
+      color: #e5e7eb;
+      box-shadow: 0 8px 18px rgba(15,23,42,0.75);
+    }
+
+    .hidden {
+      display: none;
+    }
+    .card {
+      background: radial-gradient(circle at top left, rgba(148,163,184,0.16), #020617 55%);
+      border-radius: 18px;
+      border: 1px solid rgba(51,65,85,0.9);
+      padding: 12px 14px;
+      box-shadow: 0 18px 40px rgba(15,23,42,0.92);
+    }
+    .card + .card {
+      margin-top: 10px;
+    }
+
+    .player-list {
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 8px;
+      background: rgba(15,23,42,0.9);
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      white-space: pre-line;
+    }
+
+    .board-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .board-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed rgba(148,163,184,0.5);
+    }
+    .board-layout {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .board {
+      margin-top: 4px;
+      padding: 18px;
+      border-radius: 26px;
+      background:
+        radial-gradient(circle at center, rgba(248,250,252,0.06), transparent 55%),
+        radial-gradient(circle at top left, rgba(59,130,246,0.14), transparent 60%),
+        #020617;
+      border: 1px solid rgba(55,65,81,0.95);
+      width: 100%;
+      max-width: 456px; /* 棋盤整體放大約 20%（原本約 380px） */
+      transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
+      box-shadow: 0 18px 40px rgba(15,23,42,0.95);
+    }
+    .board-zoom {
+      transform: scale(1.06);
+      box-shadow: 0 22px 48px rgba(37,99,235,0.7);
+    }
+    .board-track {
+      display: grid;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: 11px; /* 原本 16px，縮小約 30% 當作圈與圈之間的 gap */
+      margin: 8px 0 10px;
+    }
+    .cell {
+      position: relative;
+      padding-top: 100%;
+      border-radius: 14px;
+      background: #020617;
+      border: 1px solid #111827;
+      overflow: hidden;
+      transition: transform 0.18s ease-out, box-shadow 0.18s ease-out, border-color 0.18s ease-out;
+    }
+    .cell-path {
+      background: #020617;
+    }
+    .cell-level-A {
+      background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(59,130,246,0.7));
+      border-color: rgba(59,130,246,0.95);
+    }
+    .cell-level-B {
+      background: linear-gradient(135deg, rgba(251,191,36,0.22), rgba(245,158,11,0.85));
+      border-color: rgba(245,158,11,0.98);
+    }
+    .cell-level-C {
+      background: linear-gradient(135deg, rgba(248,113,113,0.3), rgba(239,68,68,0.9));
+      border-color: rgba(239,68,68,1);
+    }
+    .cell-center {
+      background: radial-gradient(circle at center, #facc15 0, #eab308 35%, #854d0e 100%);
+      box-shadow: 0 0 0 1px #fbbf24, 0 0 25px rgba(250,204,21,0.8);
+      border-color: #facc15;
+    }
+    .cell-special {
+      box-shadow: 0 0 14px rgba(250,204,21,0.95);
+      border-width: 2px;
+      border-color: #facc15;
+    }
+    .cell-special-active {
+      transform: scale(1.18);
+      box-shadow: 0 0 22px rgba(250,204,21,1);
+      animation: special-pulse 0.9s ease-out 1;
+    }
+    @keyframes special-pulse {
+      0% { transform: scale(1.0); }
+      40% { transform: scale(1.24); }
+      100% { transform: scale(1.06); }
+    }
+    .cell-inner {
+      position: absolute;
+      inset: 8px;
+    }
+    .cell-star {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      color: #facc15;
+      text-shadow: 0 0 10px rgba(250,204,21,0.95);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .tokens {
+      position: absolute;
+      inset: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: center;
+      justify-content: center;
+      gap: 4px;
+      z-index: 1;
+    }
+    .token {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 2px solid #0b1120;
+      box-shadow: 0 0 0 1px rgba(15,23,42,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #0b1120;
+    }
+    .token-current {
+      box-shadow: 0 0 0 2px #fbbf24, 0 0 12px rgba(250,204,21,0.95);
+    }
+
+    .status {
+      font-size: 14px;
+      text-align: left;
+    }
+    .status-name {
+      display: inline-block;
+      margin-left: 4px;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top, rgba(250,204,21,0.3), transparent 65%);
+      color: #fef3c7;
+      text-shadow: 0 0 6px rgba(250,204,21,0.9);
+    }
+
+    .dice-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+    .dice-label {
+      font-size: 12px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .dice-face {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      background: radial-gradient(circle at 30% 30%, #f9fafb 0, #e5e7eb 40%, #9ca3af 100%);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 6px;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.6);
+      transform-origin: center;
+      transition: transform 0.12s ease-out, box-shadow 0.12s ease-out;
+      cursor: pointer; /* 直接按骰子即可擲骰 */
+    }
+    .dice-face:hover {
+      transform: translateY(-1px) scale(1.03);
+      box-shadow: 0 14px 32px rgba(0,0,0,0.7);
+    }
+    .dice-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #111827;
+      margin: auto;
+    }
+    .dice-rolling {
+      animation: dice-roll 0.6s linear infinite;
+    }
+    @keyframes dice-roll {
+      0% { transform: rotate3d(1, 1, 0, 0deg); }
+      25% { transform: rotate3d(1, 1, 0, 90deg); }
+      50% { transform: rotate3d(1, 0, 1, 180deg); }
+      75% { transform: rotate3d(0, 1, 1, 270deg); }
+      100% { transform: rotate3d(1, 1, 0, 360deg); }
+    }
+
+    .legend {
+      font-size: 12px;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      min-width: 92px;
+      margin-top: 4px;
+    }
+    .legend-title {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      border: 1px solid #0b1120;
+    }
+
+    .command-box {
+      margin-top: 6px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: radial-gradient(circle at top, rgba(37,99,235,0.26), rgba(15,23,42,0.96));
+      border: 1px solid rgba(37,99,235,0.95);
+      font-size: 24px; /* 18px → 24px 放大約 30% */
+      min-height: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+      box-shadow: 0 14px 32px rgba(15,23,42,0.9);
+    }
+    .command-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .command-actions button {
+      font-size: 13px;
+      padding: 6px 14px;
+    }
+    .collision {
+      display: inline-block;
+      margin-top: 4px;
+      font-weight: 700;
+      color: #f97316;
+      text-shadow: 0 0 8px rgba(249,115,22,0.95);
+      font-size: 18px;
+    }
+
+    footer {
+      margin-top: 4px;
+      padding: 4px 16px 10px;
+      font-size: 11px;
+      text-align: center;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="title-block">
+        <h1>派對飛行棋</h1>
+        <div class="subtitle">情侶對戰 · 旋轉骰子 · 抽任務喝一杯</div>
+      </div>
+      <div class="badge-beta">PROTOTYPE</div>
+    </header>
+
+    <!-- Step 1: select pairs -->
+    <section id="step-pairs" class="section">
+      <div class="card">
+        <label for="pair-count">選擇對數（1 ～ 4 對）：</label>
+        <select id="pair-count">
+          <option value="1">1 對（2 人）</option>
+          <option value="2">2 對（4 人）</option>
+          <option value="3">3 對（6 人）</option>
+          <option value="4">4 對（8 人）</option>
+        </select>
+        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+          <button id="btn-start-names">下一步：輸入名字</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: input names -->
+    <section id="step-names" class="section hidden">
+      <div class="card">
+        <div id="name-instruction" style="font-size:14px; margin-bottom:4px;"></div>
+        <label id="name-label" for="name-input">輸入名字：</label>
+        <input id="name-input" type="text" autocomplete="off" />
+        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+          <button id="btn-next-name">確認此人，下一位</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 3: confirm players -->
+    <section id="step-confirm" class="section hidden">
+      <div class="card">
+        <div style="font-size:14px; margin-bottom:4px;">玩家列表：</div>
+        <div id="player-list" class="player-list"></div>
+        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+          <button id="btn-start-game">開始遊戲</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 4: game board -->
+    <section id="step-game" class="section hidden">
+      <div class="card board-wrapper">
+        <div class="board-top-row">
+          <div id="turn-status" class="status"></div>
+          <div class="dice-box">
+            <div class="dice-label">TAP TO ROLL</div>
+            <div id="dice-face" class="dice-face"></div>
+          </div>
+        </div>
+        <div class="board-layout">
+          <div>
+            <div class="legend-title">目前玩家</div>
+            <div id="legend" class="legend"></div>
+          </div>
+          <div id="board" class="board">
+            <div id="board-track" class="board-track"></div>
+          </div>
+        </div>
+        <div class="command-box" id="command-box">
+          <div id="command-text">指令會出現在這裡</div>
+          <div class="command-actions">
+            <button id="btn-confirm-task" class="btn-secondary" disabled>完成指令</button>
+            <button id="btn-drink" disabled>喝一杯</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>提示：點骰子就會擲骰，照螢幕上的指令完成任務或喝一杯再換下一位。</footer>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
