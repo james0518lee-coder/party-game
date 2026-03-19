@@ -30,8 +30,18 @@ const COLORS = [
 
 // ===== 語音播報（TTS）設定：使用瀏覽器內建 speechSynthesis =====
 function speakCommand(text) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  if (typeof window === "undefined") return;
   if (!text) return;
+
+  if (!("speechSynthesis" in window)) {
+    if (!window.__partyGameTtsWarned) {
+      window.__partyGameTtsWarned = true;
+      try {
+        alert("此瀏覽器不支援語音播報，指令會以文字顯示。");
+      } catch (_) {}
+    }
+    return;
+  }
 
   try {
     // 先停止目前正在播報的內容
@@ -93,9 +103,10 @@ let commandDB = null;
 
 // 嘗試從 commands.json 載入「共用」指令資料庫
 // 成功的話，所有裝置只要讀這個檔就會拿到同一份指令
-// 若載入失敗（檔案不存在或 JSON 壞掉），則退回 localStorage 版本
+// 若載入失敗（檔案不存在或 JSON 壞掉），則使用內建預設指令（不再讀取 localStorage）
 (function initCommandDB() {
-  fetch("commands.json")
+  // 加上簡單版本號避免手機快取舊的 commands.json
+  fetch("commands.json?v=2")
     .then((res) => {
       if (!res.ok) throw new Error("commands.json not found");
       return res.json();
@@ -111,8 +122,8 @@ let commandDB = null;
       console.log("Command DB loaded from commands.json", commandDB);
     })
     .catch((err) => {
-      console.warn("Failed to load commands.json, fallback to localStorage", err);
-      commandDB = loadCommandDB();
+      console.warn("Failed to load commands.json, use built-in defaults only", err);
+      commandDB = null; // 讓下面的 generateNormalCommand / generateSpecialCommand 回到 default*
     });
 })();
 
@@ -648,7 +659,8 @@ function getDicePattern(value) {
 
 function generateSpecialCommand(currentPlayer, level) {
   const db = commandDB;
-  const rawList = db && Array.isArray(db.special) && db.special.length > 0
+  const usingJson = db && Array.isArray(db.special) && db.special.length > 0;
+  const rawList = usingJson
     ? db.special
     : defaultSpecialCommands;
 
@@ -657,12 +669,14 @@ function generateSpecialCommand(currentPlayer, level) {
 
   const item = randomPick(list) || { text: "抽一張特別卡，照卡片上的指示做", level };
   const base = item.text || "抽一張特別卡，照卡片上的指示做";
-  return `${currentPlayer.name} 抽到特別格：${base}`;
+  const sourceTag = usingJson ? "[JSON]" : "[預設]";
+  return `${sourceTag} ${currentPlayer.name} 抽到特別格：${base}`;
 }
 
 function generateNormalCommand(currentPlayer, level) {
   const db = commandDB;
-  const rawList = db && Array.isArray(db.normal) && db.normal.length > 0
+  const usingJson = db && Array.isArray(db.normal) && db.normal.length > 0;
+  const rawList = usingJson
     ? db.normal
     : defaultNormalCommands;
 
@@ -674,6 +688,7 @@ function generateNormalCommand(currentPlayer, level) {
   const item = randomPick(list) || { text: "[A] 說一句祝福的話給在場所有人", kind: "self", level };
   const text = item.text || "";
   const kind = item.kind === "interaction" ? "interaction" : "self";
+  const sourceTag = usingJson ? "[JSON]" : "[預設]";
 
   if (kind === "interaction") {
     // 互動時，優先跟「其他隊伍的異性」互動
@@ -684,16 +699,16 @@ function generateNormalCommand(currentPlayer, level) {
     const other = (candidates.length > 0 ? randomPick(candidates) : randomPick(fallback)) || currentPlayer;
 
     if (text.includes("[A]") || text.includes("[B]")) {
-      return text
+      return `${sourceTag} ` + text
         .replace(/\[A\]/g, currentPlayer.name)
         .replace(/\[B\]/g, other.name);
     }
-    return `${currentPlayer.name} 跟 ${other.name}：${text}`;
+    return `${sourceTag} ${currentPlayer.name} 跟 ${other.name}：${text}`;
   } else {
     if (text.includes("[A]")) {
-      return text.replace(/\[A\]/g, currentPlayer.name);
+      return `${sourceTag} ` + text.replace(/\[A\]/g, currentPlayer.name);
     }
-    return `${currentPlayer.name}：${text}`;
+    return `${sourceTag} ${currentPlayer.name}：${text}`;
   }
 }
 
