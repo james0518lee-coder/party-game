@@ -28,6 +28,9 @@ const COLORS = [
   "#f97316",
 ];
 
+// 啟用的指令等級（A/B/C），預設 A+B
+let enabledLevels = new Set(["A", "B"]);
+
 // ===== 嵌入版指令資料庫（直接寫在程式裡） =====
 // 結構：{ normal: { text, kind, level }[], special: { text, level }[] }
 const EMBEDDED_COMMAND_DB = {
@@ -527,12 +530,15 @@ const defaultNormalCommands = [
 
 // DOM refs
 const stepPairs = document.getElementById("step-pairs");
+const stepSettings = document.getElementById("step-settings");
 const stepNames = document.getElementById("step-names");
 const stepConfirm = document.getElementById("step-confirm");
 const stepGame = document.getElementById("step-game");
 
 const pairCountSelect = document.getElementById("pair-count");
 const btnStartNames = document.getElementById("btn-start-names");
+const levelModeSelect = document.getElementById("level-mode");
+const btnConfirmSettings = document.getElementById("btn-confirm-settings");
 const nameInstruction = document.getElementById("name-instruction");
 const nameLabel = document.getElementById("name-label");
 const nameInput = document.getElementById("name-input");
@@ -573,6 +579,25 @@ btnDrink.addEventListener("click", () => {
 // Step 1: 選擇對數
 btnStartNames.addEventListener("click", () => {
   pairCount = parseInt(pairCountSelect.value, 10);
+
+  // 先進入指令強度設定畫面
+  stepPairs.classList.add("hidden");
+  stepSettings.classList.remove("hidden");
+});
+
+// 指令強度設定確認
+btnConfirmSettings.addEventListener("click", () => {
+  const mode = levelModeSelect.value;
+  if (mode === "A") {
+    enabledLevels = new Set(["A"]);
+  } else if (mode === "AB") {
+    enabledLevels = new Set(["A", "B"]);
+  } else {
+    // 親密玩樂：只用 B + C
+    enabledLevels = new Set(["B", "C"]);
+  }
+
+  stepSettings.classList.add("hidden");
   startNameInputFlow();
 });
 
@@ -837,7 +862,18 @@ function renderBoard() {
       const pathIndex = PATH.findIndex((p) => p.r === r && p.c === c);
       if (pathIndex !== -1) {
         const info = PATH[pathIndex];
-        const level = getLevelForIndex(pathIndex);
+        let level = getLevelForIndex(pathIndex);
+
+        // 根據 enabledLevels 調整顯示的格子顏色：
+        // - 只 A：所有格子都用 A 色
+        // - A+B：C 區用 B 色
+        // - A+B+C：維持原本 A/B/C 配色
+        if (!enabledLevels.has("B") && !enabledLevels.has("C")) {
+          level = "A";
+        } else if (!enabledLevels.has("C") && level === "C") {
+          level = "B";
+        }
+
         cellDiv.classList.add("cell-path");
         if (info.type === "start") {
           cellDiv.classList.add(`cell-level-${level}`);
@@ -959,8 +995,17 @@ function generateSpecialCommand(currentPlayer, level) {
     ? db.special
     : defaultSpecialCommands;
 
-  let list = rawList.filter((item) => (item.level || "A") === level);
-  if (list.length === 0) list = rawList;
+  let list = rawList.filter((item) => {
+    const lv = item.level || "A";
+    return enabledLevels.has(lv) && lv === level;
+  });
+  if (list.length === 0) {
+    // 如果這個區段沒有符合強度設定的，就退回所有允許等級
+    list = rawList.filter((item) => enabledLevels.has(item.level || "A"));
+  }
+  if (list.length === 0) {
+    list = rawList;
+  }
 
   const item = randomPick(list) || { text: "抽一張特別卡，照卡片上的指示做", level };
   const base = item.text || "抽一張特別卡，照卡片上的指示做";
@@ -974,7 +1019,14 @@ function generateNormalCommand(currentPlayer, level) {
     ? db.normal
     : defaultNormalCommands;
 
-  let list = rawList.filter((item) => (item.level || "A") === level);
+  let list = rawList.filter((item) => {
+    const lv = item.level || "A";
+    return enabledLevels.has(lv) && lv === level;
+  });
+  if (list.length === 0) {
+    // 如果這個區段沒有符合強度設定的，就退回所有允許等級
+    list = rawList.filter((item) => enabledLevels.has(item.level || "A"));
+  }
   if (list.length === 0) {
     list = rawList;
   }

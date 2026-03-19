@@ -442,7 +442,25 @@
           <option value="4">4 對（8 人）</option>
         </select>
         <div style="margin-top:8px; display:flex; justify-content:flex-end;">
-          <button id="btn-start-names">下一步：輸入名字</button>
+          <button id="btn-start-names">下一步：設定指令強度</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 1.5: command level settings -->
+    <section id="step-settings" class="section hidden">
+      <div class="card">
+        <div style="font-size:14px; margin-bottom:6px;">指令主題：</div>
+        <div style="font-size:13px; color:#9ca3af; margin-bottom:6px;">
+          喝酒聊天 · KTV 互動 · 親密玩樂
+        </div>
+        <select id="level-mode">
+          <option value="A">喝酒聊天</option>
+          <option value="AB" selected>KTV 互動</option>
+          <option value="ABC">親密玩樂</option>
+        </select>
+        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+          <button id="btn-confirm-settings">下一步：輸入名字</button>
         </div>
       </div>
     </section>
@@ -497,7 +515,7 @@
           </div>
         </div>
       </div>
-    </section> 
+    </section>
 
     <footer>提示：點骰子就會擲骰，照螢幕上的指令完成任務或喝一杯再換下一位。</footer>
   </div>
