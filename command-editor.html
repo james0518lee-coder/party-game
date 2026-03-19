@@ -245,12 +245,14 @@
       <div class="row">
         <button id="btn-export">匯出目前資料</button>
         <button id="btn-import">從上方 JSON 匯入</button>
+        <button id="btn-download-commands" class="btn-secondary">下載為 commands.json 檔</button>
         <button id="btn-clear" style="background:#ef4444;color:#fef2f2;">清空資料庫</button>
       </div>
     </section>
 
     <div class="footer">
-      資料會存到瀏覽器的 localStorage（partyGameCommandDB），遊戲頁面會自動讀取這個資料庫。
+      資料會存到瀏覽器的 localStorage（partyGameCommandDB），遊戲頁面會自動讀取這個資料庫。<br>
+      若要更新共用的 commands.json：先在這裡編輯 → 匯出或修改 → 按「下載為 commands.json 檔」，再覆蓋 repo 裡的 commands.json 後 git push。
     </div>
   </div>
 

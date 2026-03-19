@@ -55,6 +55,7 @@ const btnAddNormal = document.getElementById("btn-add-normal");
 const btnAddSpecial = document.getElementById("btn-add-special");
 const btnExport = document.getElementById("btn-export");
 const btnImport = document.getElementById("btn-import");
+const btnDownloadCommands = document.getElementById("btn-download-commands");
 const btnClear = document.getElementById("btn-clear");
 
 let db = loadDB();
@@ -403,6 +404,24 @@ btnAddSpecial.addEventListener("click", () => {
 
 btnExport.addEventListener("click", () => {
   jsonArea.value = JSON.stringify(db, null, 2);
+});
+
+btnDownloadCommands.addEventListener("click", () => {
+  try {
+    const dataStr = JSON.stringify(db, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "commands.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert("下載 commands.json 失敗，請稍後再試");
+  }
 });
 
 btnImport.addEventListener("click", () => {

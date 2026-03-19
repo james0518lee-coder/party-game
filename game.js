@@ -28,6 +28,26 @@ const COLORS = [
   "#f97316",
 ];
 
+// ===== 語音播報（TTS）設定：使用瀏覽器內建 speechSynthesis =====
+function speakCommand(text) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  if (!text) return;
+
+  try {
+    // 先停止目前正在播報的內容
+    window.speechSynthesis.cancel();
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "zh-TW"; // 以中文為主
+    utter.rate = 1.0;      // 語速
+    utter.pitch = 1.0;     // 音高
+
+    window.speechSynthesis.speak(utter);
+  } catch (e) {
+    console.warn("speakCommand error", e);
+  }
+}
+
 // ===== 指令資料庫存取（localStorage） =====
 const COMMAND_STORAGE_KEY = "partyGameCommandDB";
 
@@ -69,7 +89,32 @@ function loadCommandDB() {
   }
 }
 
-let commandDB = loadCommandDB();
+let commandDB = null;
+
+// 嘗試從 commands.json 載入「共用」指令資料庫
+// 成功的話，所有裝置只要讀這個檔就會拿到同一份指令
+// 若載入失敗（檔案不存在或 JSON 壞掉），則退回 localStorage 版本
+(function initCommandDB() {
+  fetch("commands.json")
+    .then((res) => {
+      if (!res.ok) throw new Error("commands.json not found");
+      return res.json();
+    })
+    .then((data) => {
+      const normalRaw = Array.isArray(data.normal) ? data.normal : [];
+      const specialRaw = Array.isArray(data.special) ? data.special : [];
+
+      const normal = normalRaw.map(normalizeNormalItem);
+      const special = specialRaw.map(normalizeSpecialItem);
+
+      commandDB = { normal, special };
+      console.log("Command DB loaded from commands.json", commandDB);
+    })
+    .catch((err) => {
+      console.warn("Failed to load commands.json, fallback to localStorage", err);
+      commandDB = loadCommandDB();
+    });
+})();
 
 // ===== 棋盤路徑：照你指定的文字路線建立 PATH =====
 // PATH: { r, c, type }，type: normal | special | start | end
@@ -435,9 +480,12 @@ function handleLanding(current) {
   }
 
   if (collisionText) {
+    const combined = `${msg} ${collisionText}`;
     commandTextDiv.innerHTML = `${msg}<br><span class="collision">${collisionText}</span>`;
+    speakCommand(combined);
   } else {
     commandTextDiv.textContent = msg;
+    speakCommand(msg);
   }
 
   waitingForChoice = true;
