@@ -662,10 +662,8 @@ function showConfirmStep() {
 }
 
 btnStartGame.addEventListener("click", () => {
-  if (!commandInitDone) {
-    alert("指令庫資料正在載入中，請 1 秒後再按一次「開始遊戲」。");
-    return;
-  }
+  // 指令資料在載入 script 時就已經從 EMBEDDED_COMMAND_DB 初始化完成
+  // 這裡直接開始遊戲即可
   startGame();
 });
 
