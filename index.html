@@ -182,13 +182,12 @@
         #020617;
       border: 1px solid rgba(55,65,81,0.95);
       width: 100%;
-      max-width: 456px; /* 棋盤整體放大約 20%（原本約 380px） */
+      max-width: 540px; /* 棋盤整體放大約 40%（原本約 380px） */
       transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
       box-shadow: 0 18px 40px rgba(15,23,42,0.95);
     }
     .board-zoom {
-      transform: scale(1.06);
-      box-shadow: 0 22px 48px rgba(37,99,235,0.7);
+      /* 效果關閉：不再改變大小或陰影，僅保留 class 供程式呼叫但不產生視覺差異 */
     }
     .board-track {
       display: grid;
