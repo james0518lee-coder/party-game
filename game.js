@@ -964,8 +964,7 @@ function generateSpecialCommand(currentPlayer, level) {
 
   const item = randomPick(list) || { text: "抽一張特別卡，照卡片上的指示做", level };
   const base = item.text || "抽一張特別卡，照卡片上的指示做";
-  const sourceTag = usingJson ? "[JSON]" : "[預設]";
-  return `${sourceTag} ${currentPlayer.name} 抽到特別格：${base}`;
+  return `${currentPlayer.name} 抽到特別格：${base}`;
 }
 
 function generateNormalCommand(currentPlayer, level) {
@@ -983,7 +982,6 @@ function generateNormalCommand(currentPlayer, level) {
   const item = randomPick(list) || { text: "[A] 說一句祝福的話給在場所有人", kind: "self", level };
   const text = item.text || "";
   const kind = item.kind === "interaction" ? "interaction" : "self";
-  const sourceTag = usingJson ? "[JSON]" : "[預設]";
 
   if (kind === "interaction") {
     // 互動時，優先跟「其他隊伍的異性」互動
@@ -994,16 +992,16 @@ function generateNormalCommand(currentPlayer, level) {
     const other = (candidates.length > 0 ? randomPick(candidates) : randomPick(fallback)) || currentPlayer;
 
     if (text.includes("[A]") || text.includes("[B]")) {
-      return `${sourceTag} ` + text
+      return text
         .replace(/\[A\]/g, currentPlayer.name)
         .replace(/\[B\]/g, other.name);
     }
-    return `${sourceTag} ${currentPlayer.name} 跟 ${other.name}：${text}`;
+    return `${currentPlayer.name} 跟 ${other.name}：${text}`;
   } else {
     if (text.includes("[A]")) {
-      return `${sourceTag} ` + text.replace(/\[A\]/g, currentPlayer.name);
+      return text.replace(/\[A\]/g, currentPlayer.name);
     }
-    return `${sourceTag} ${currentPlayer.name}：${text}`;
+    return `${currentPlayer.name}：${text}`;
   }
 }
 
