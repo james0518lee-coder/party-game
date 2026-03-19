@@ -100,6 +100,7 @@ function loadCommandDB() {
 }
 
 let commandDB = null;
+let commandInitDone = false; // 指令庫是否已完成載入（成功或失敗）
 
 // 嘗試從 commands.json 載入「共用」指令資料庫
 // 成功的話，所有裝置只要讀這個檔就會拿到同一份指令
@@ -120,10 +121,12 @@ let commandDB = null;
 
       commandDB = { normal, special };
       console.log("Command DB loaded from commands.json", commandDB);
+      commandInitDone = true;
     })
     .catch((err) => {
       console.warn("Failed to load commands.json, use built-in defaults only", err);
       commandDB = null; // 讓下面的 generateNormalCommand / generateSpecialCommand 回到 default*
+      commandInitDone = true;
     });
 })();
 
@@ -368,6 +371,10 @@ function showConfirmStep() {
 }
 
 btnStartGame.addEventListener("click", () => {
+  if (!commandInitDone) {
+    alert("指令庫資料正在載入中，請 1 秒後再按一次「開始遊戲」。");
+    return;
+  }
   startGame();
 });
 
@@ -381,8 +388,7 @@ function startGame() {
   btnConfirmTask.disabled = true;
   btnDrink.disabled = true;
 
-  commandDB = loadCommandDB();
-
+  // commandDB 由啟動時的 initCommandDB() 負責載入 commands.json
   players = players.map((p) => ({ ...p, positionIndex: 0 }));
 
   // 每局重新隨機特別格
