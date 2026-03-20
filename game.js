@@ -5,7 +5,8 @@
 // 指令區：放大字體 + 「完成指令」與「喝一杯」按鈕；連續喝一杯超過 2 次後，只剩完成指令可選，完成指令後重置喝一杯次數
 // 棋子：每位玩家有自己的顏色，圓點上疊加 M/F 字樣表示性別
 
-const BOARD_SIZE = 9; // 9x9 棋盤
+const BASE_BOARD_SIZE = 9; // 9x9 棋盤
+let currentBoardSize = BASE_BOARD_SIZE;
 
 let pairCount = 1;
 let players = [];
@@ -30,13 +31,12 @@ const COLORS = [
 
 // 啟用的指令等級（A/B/C），預設 A+B
 let enabledLevels = new Set(["A", "B"]);
-const PLAYER_COUNT_REDUCTION = {
-  2: 0.1,
-  4: 0.2,
-  6: 0.3,
-  8: 0.4,
+const PLAYER_COUNT_BOARD_SIZE = {
+  2: 8,
+  4: 7,
+  6: 6,
+  8: 5,
 };
-let currentPathReduction = 0;
 
 // ===== 嵌入版指令資料庫（直接寫在程式裡） =====
 // 結構：{ normal: { text, kind, level }[], special: { text, level }[] }
@@ -468,8 +468,8 @@ let PATH = [];
 
 (function buildBasePath() {
   // 起點在右下角外圈： (8,8)
-  let r = BOARD_SIZE - 1;
-  let c = BOARD_SIZE - 1;
+  let r = BASE_BOARD_SIZE - 1;
+  let c = BASE_BOARD_SIZE - 1;
   BASE_PATH.push({ r, c, type: "normal" });
 
   function step(dr, dc, count) {
@@ -508,38 +508,40 @@ function cloneBasePath() {
   return BASE_PATH.map((cell) => ({ ...cell }));
 }
 
-function buildReducedPath(reductionRatio = 0) {
-  const base = cloneBasePath();
-  if (base.length === 0) return [];
-  if (!reductionRatio || reductionRatio <= 0) return base;
-
-  const targetCount = Math.max(3, Math.round(base.length * (1 - reductionRatio)));
-  if (targetCount >= base.length) return base;
-
-  const lastIndex = base.length - 1;
-  const denom = targetCount - 1;
-  const indices = [];
-
-  for (let i = 0; i < targetCount; i++) {
-    let idx = Math.round((i * lastIndex) / denom);
-    const prev = i > 0 ? indices[i - 1] : -1;
-    if (idx <= prev) {
-      idx = Math.min(lastIndex, prev + 1);
-    }
-    if (i === targetCount - 1) {
-      idx = lastIndex;
-    }
-    indices.push(idx);
+function buildPathForSize(targetSize) {
+  if (targetSize === BASE_BOARD_SIZE) {
+    return cloneBasePath();
   }
 
-  return indices.map((idx, i) => {
-    const cell = base[idx];
-    return {
-      r: cell.r,
-      c: cell.c,
-      type: i === 0 ? "start" : i === indices.length - 1 ? "end" : "normal",
-    };
-  });
+  const base = BASE_PATH;
+  if (base.length === 0) return [];
+
+  const maxBase = BASE_BOARD_SIZE - 1;
+  const maxTarget = targetSize - 1;
+  const result = [];
+  let lastKey = null;
+
+  for (const cell of base) {
+    let r = cell.r;
+    let c = cell.c;
+    if (maxTarget > 0 && maxBase > 0) {
+      r = Math.round((cell.r / maxBase) * maxTarget);
+      c = Math.round((cell.c / maxBase) * maxTarget);
+    } else {
+      r = 0;
+      c = 0;
+    }
+    const key = `${r},${c}`;
+    if (key === lastKey) continue;
+    result.push({ r, c, type: "normal" });
+    lastKey = key;
+  }
+
+  if (result.length > 0) {
+    result[0].type = "start";
+    result[result.length - 1].type = "end";
+  }
+  return result;
 }
 
 PATH = cloneBasePath();
@@ -682,7 +684,7 @@ if (btnReroll) {
 btnStartNames.addEventListener("click", () => {
   pairCount = parseInt(pairCountSelect.value, 10);
   const participants = pairCount * 2;
-  currentPathReduction = PLAYER_COUNT_REDUCTION[participants] ?? 0;
+  currentBoardSize = PLAYER_COUNT_BOARD_SIZE[participants] ?? BASE_BOARD_SIZE;
 
   // 先進入指令強度設定畫面
   stepPairs.classList.add("hidden");
@@ -807,7 +809,7 @@ function startGame() {
   btnDrink.disabled = true;
   if (btnReroll) btnReroll.disabled = true;
 
-  PATH = buildReducedPath(currentPathReduction);
+  PATH = buildPathForSize(currentBoardSize);
 
   // commandDB 由啟動時的 initCommandDB() 負責載入 commands.json
   players = players.map((p) => ({ ...p, positionIndex: 0 }));
@@ -1003,8 +1005,11 @@ function renderBoard() {
 
   const currentPosIndex = players[currentPlayerIndex]?.positionIndex ?? -1;
 
-  for (let r = 0; r < BOARD_SIZE; r++) {
-    for (let c = 0; c < BOARD_SIZE; c++) {
+  const size = currentBoardSize;
+  boardTrack.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
       const cellDiv = document.createElement("div");
       cellDiv.className = "cell";
 
