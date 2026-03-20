@@ -595,6 +595,7 @@ const commandKindBadge = document.getElementById("command-kind-badge");
 const commandLevelBadge = document.getElementById("command-level-badge");
 const commandTextDiv = document.getElementById("command-text");
 const btnConfirmTask = document.getElementById("btn-confirm-task");
+const btnReroll = document.getElementById("btn-reroll");
 const btnDrink = document.getElementById("btn-drink");
 const board = document.getElementById("board");
 const legendDiv = document.getElementById("legend");
@@ -606,6 +607,7 @@ btnConfirmTask.addEventListener("click", () => {
   waitingForChoice = false;
   btnConfirmTask.disabled = true;
   btnDrink.disabled = true;
+  if (btnReroll) btnReroll.disabled = true;
   goToNextPlayer(true);
 });
 
@@ -615,8 +617,18 @@ btnDrink.addEventListener("click", () => {
   waitingForChoice = false;
   btnConfirmTask.disabled = true;
   btnDrink.disabled = true;
+  if (btnReroll) btnReroll.disabled = true;
   goToNextPlayer(true);
 });
+
+if (btnReroll) {
+  btnReroll.addEventListener("click", () => {
+    if (!waitingForChoice || gameOver) return;
+    const current = players[currentPlayerIndex];
+    if (!current) return;
+    handleLanding(current);
+  });
+}
 
 // Step 1: 選擇對數
 btnStartNames.addEventListener("click", () => {
@@ -743,6 +755,7 @@ function startGame() {
   waitingForChoice = false;
   btnConfirmTask.disabled = true;
   btnDrink.disabled = true;
+  if (btnReroll) btnReroll.disabled = true;
 
   // commandDB 由啟動時的 initCommandDB() 負責載入 commands.json
   players = players.map((p) => ({ ...p, positionIndex: 0 }));
@@ -861,6 +874,7 @@ function handleLanding(current) {
     commandTextDiv.textContent = msg;
     btnConfirmTask.disabled = true;
     btnDrink.disabled = true;
+    if (btnReroll) btnReroll.disabled = true;
     waitingForChoice = false;
     return;
   } else if (cell.type === "special") {
@@ -930,6 +944,7 @@ function handleLanding(current) {
   waitingForChoice = true;
   btnConfirmTask.disabled = false;
   btnDrink.disabled = drinkCount >= 2;
+  if (btnReroll) btnReroll.disabled = false;
 }
 
 function goToNextPlayer(updateBoard = true) {
