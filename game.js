@@ -49,7 +49,7 @@ const EMBEDDED_COMMAND_DB = {
       "level": "A"
     },
     {
-      "text": "請[B]倒酒,倒多少由[B]決定,再讓A喝完",
+      "text": "請[B]倒酒,倒多少由[B]決定,再讓你喝完",
       "kind": "interaction",
       "level": "A"
     },
@@ -277,6 +277,16 @@ const EMBEDDED_COMMAND_DB = {
       "text": "跟[B]猜拳輸的脫一件",
       "kind": "interaction",
       "level": "C"
+    },
+    {
+      "text": "溫柔的撫摸[B]的下面5秒鐘",
+      "kind": "interaction",
+      "level": "C"
+    },
+    {
+      "text": "跟[B]旁邊的異性換位置",
+      "kind": "interaction",
+      "level": "A"
     }
   ],
   "special": [
@@ -313,7 +323,7 @@ const EMBEDDED_COMMAND_DB = {
       "level": "B"
     },
     {
-      "text": "跟所有異性喇舌5秒",
+      "text": "跟全場異性喇舌5秒",
       "level": "B"
     },
     {
@@ -329,8 +339,24 @@ const EMBEDDED_COMMAND_DB = {
       "level": "C"
     },
     {
-      "text": "全場自行找異性舌5秒鐘",
+      "text": "找離你最近的異性喇舌5秒鐘",
       "level": "B"
+    },
+    {
+      "text": "所有人找離你最近的異性擁包5秒鐘",
+      "level": "A"
+    },
+    {
+      "text": "大家通通有,全都喝一杯",
+      "level": "A"
+    },
+    {
+      "text": "跟所有異性磨鼻子5秒",
+      "level": "A"
+    },
+    {
+      "text": "指定一個人跟你猜拳 總共猜5次 輸一次就加一杯 最多3杯",
+      "level": "A"
     }
   ]
 };
@@ -1251,20 +1277,9 @@ function generateNormalCommand(currentPlayer, level) {
 
 function handleWin(player) {
   gameOver = true;
-  const msg = `🎉 ${player.name} 準備告白！已到達終點。`;
+  const msg = `🎉 ${player.name}，恭喜你，你可以拉最後一位異性去床上做任何事30秒鐘，遊戲結束！`;
   turnStatus.textContent = msg;
-
-  const loser = players.reduce((acc, p) => {
-    if (!acc) return p;
-    return p.positionIndex < acc.positionIndex ? p : acc;
-  }, null);
-
-  let rewardText = "贏家可以指定任意兩個人做一個指令";
-  if (loser && loser.id !== player.id) {
-    rewardText = `${player.name} 獲勝！最後一名是 ${loser.name}，請他抽一張懲罰卡。`;
-  }
-
-  return `${msg}\n${rewardText}`;
+  return msg;
 }
 
 function randomPick(arr) {
