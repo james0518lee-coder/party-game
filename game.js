@@ -922,24 +922,7 @@ function handleLanding(current) {
     }
   }
 
-  // 撞在一起的額外懲罰文字
-  const sameSpotPlayers = players.filter(
-    (p) => p.positionIndex === current.positionIndex
-  );
-  let collisionText = "";
-  if (sameSpotPlayers.length >= 2) {
-    const names = sameSpotPlayers.map((p) => p.name).join("、");
-    collisionText = `${names} 靠太近，各罰喝一杯！`;
-  }
-
-  if (collisionText) {
-    const combined = `${msg} ${collisionText}`;
-    commandTextDiv.innerHTML = `${msg}<br><span class="collision">${collisionText}</span>`;
-    speakCommand(combined);
-  } else {
-    commandTextDiv.textContent = msg;
-    speakCommand(msg);
-  }
+  speakCommand(msg);
 
   waitingForChoice = true;
   btnConfirmTask.disabled = false;
