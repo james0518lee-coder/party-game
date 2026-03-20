@@ -30,6 +30,12 @@ const COLORS = [
 
 // 啟用的指令等級（A/B/C），預設 A+B
 let enabledLevels = new Set(["A", "B"]);
+const MODE_PATH_REDUCTION = {
+  A: 0.3,
+  AB: 0.3,
+  ABC: 0.4,
+};
+let currentPathReduction = 0;
 
 // ===== 嵌入版指令資料庫（直接寫在程式裡） =====
 // 結構：{ normal: { text, kind, level }[], special: { text, level }[] }
@@ -456,19 +462,20 @@ let commandDB = null;
 
 // ===== 棋盤路徑：照你指定的文字路線建立 PATH =====
 // PATH: { r, c, type }，type: normal | special | start | end
-const PATH = [];
+const BASE_PATH = [];
+let PATH = [];
 
-(function buildPathFromSteps() {
+(function buildBasePath() {
   // 起點在右下角外圈： (8,8)
   let r = BOARD_SIZE - 1;
   let c = BOARD_SIZE - 1;
-  PATH.push({ r, c, type: "normal" });
+  BASE_PATH.push({ r, c, type: "normal" });
 
   function step(dr, dc, count) {
     for (let i = 0; i < count; i++) {
       r += dr;
       c += dc;
-      PATH.push({ r, c, type: "normal" });
+      BASE_PATH.push({ r, c, type: "normal" });
     }
   }
 
@@ -492,9 +499,49 @@ const PATH = [];
   step(-1, 0, 2); // (4,4)
 
   // 標記起點與終點
-  if (PATH.length > 0) PATH[0].type = "start"; // 起點：右下角
-  if (PATH.length > 0) PATH[PATH.length - 1].type = "end"; // 終點：中心 (4,4)
+  if (BASE_PATH.length > 0) BASE_PATH[0].type = "start"; // 起點：右下角
+  if (BASE_PATH.length > 0) BASE_PATH[BASE_PATH.length - 1].type = "end"; // 終點：中心 (4,4)
 })();
+
+function cloneBasePath() {
+  return BASE_PATH.map((cell) => ({ ...cell }));
+}
+
+function buildReducedPath(reductionRatio = 0) {
+  const base = cloneBasePath();
+  if (base.length === 0) return [];
+  if (!reductionRatio || reductionRatio <= 0) return base;
+
+  const targetCount = Math.max(3, Math.round(base.length * (1 - reductionRatio)));
+  if (targetCount >= base.length) return base;
+
+  const lastIndex = base.length - 1;
+  const denom = targetCount - 1;
+  const indices = [];
+
+  for (let i = 0; i < targetCount; i++) {
+    let idx = Math.round((i * lastIndex) / denom);
+    const prev = i > 0 ? indices[i - 1] : -1;
+    if (idx <= prev) {
+      idx = Math.min(lastIndex, prev + 1);
+    }
+    if (i === targetCount - 1) {
+      idx = lastIndex;
+    }
+    indices.push(idx);
+  }
+
+  return indices.map((idx, i) => {
+    const cell = base[idx];
+    return {
+      r: cell.r,
+      c: cell.c,
+      type: i === 0 ? "start" : i === indices.length - 1 ? "end" : "normal",
+    };
+  });
+}
+
+PATH = cloneBasePath();
 
 function getLevelForIndex(index) {
   // 25% A、45% B、30% C
@@ -651,6 +698,8 @@ btnConfirmSettings.addEventListener("click", () => {
     enabledLevels = new Set(["B", "C"]);
   }
 
+  currentPathReduction = MODE_PATH_REDUCTION[mode] ?? 0;
+
   stepSettings.classList.add("hidden");
   startNameInputFlow();
 });
@@ -756,6 +805,8 @@ function startGame() {
   btnConfirmTask.disabled = true;
   btnDrink.disabled = true;
   if (btnReroll) btnReroll.disabled = true;
+
+  PATH = buildReducedPath(currentPathReduction);
 
   // commandDB 由啟動時的 initCommandDB() 負責載入 commands.json
   players = players.map((p) => ({ ...p, positionIndex: 0 }));
