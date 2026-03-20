@@ -357,6 +357,36 @@ function speakCommand(text) {
   }
 }
 
+// ===== 特別格音效：簡單的 Web Audio 短音效 =====
+let specialAudioCtx = null;
+function playSpecialChime() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!specialAudioCtx) {
+      specialAudioCtx = new AudioCtx();
+    }
+    const ctx = specialAudioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "triangle";
+    osc.frequency.value = 880; // 高一點的提示音
+
+    gain.gain.setValueAtTime(0.0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  } catch (e) {
+    console.warn("playSpecialChime error", e);
+  }
+}
+
 // ===== 指令資料庫存取（localStorage） =====
 const COMMAND_STORAGE_KEY = "partyGameCommandDB";
 
@@ -466,6 +496,15 @@ const PATH = [];
   if (PATH.length > 0) PATH[PATH.length - 1].type = "end"; // 終點：中心 (4,4)
 })();
 
+function getLevelForIndex(index) {
+  // 25% A、45% B、30% C
+  const maxIndex = PATH.length - 1;
+  const ratio = index / maxIndex;
+  if (ratio <= 0.25) return "A";
+  if (ratio <= 0.7) return "B";
+  return "C";
+}
+
 // 隨機挑選特別格：A 2 個、B 3 個、C 1 個
 function assignRandomSpecialTiles() {
   // 先清掉舊的 special（保留 start/end）
@@ -551,6 +590,9 @@ const turnStatus = document.getElementById("turn-status");
 const diceFace = document.getElementById("dice-face");
 const boardTrack = document.getElementById("board-track");
 const commandBox = document.getElementById("command-box");
+const commandMeta = document.getElementById("command-meta");
+const commandKindBadge = document.getElementById("command-kind-badge");
+const commandLevelBadge = document.getElementById("command-level-badge");
 const commandTextDiv = document.getElementById("command-text");
 const btnConfirmTask = document.getElementById("btn-confirm-task");
 const btnDrink = document.getElementById("btn-drink");
@@ -779,28 +821,94 @@ function stepMove(roll, done) {
   moveOne();
 }
 
+function getDisplayLevelForIndex(index) {
+  let level = getLevelForIndex(index);
+  // 根據 enabledLevels 調整顯示與抽指令用的等級：
+  // - 只 A：所有格子都用 A
+  // - A+B：C 區顯示為 B
+  // - B+C：A 區顯示為 B
+  if (!enabledLevels.has("B") && !enabledLevels.has("C")) {
+    level = "A";
+  } else if (!enabledLevels.has("C") && level === "C") {
+    level = "B";
+  } else if (!enabledLevels.has("A") && level === "A") {
+    level = "B";
+  }
+  return level;
+}
+
 function handleLanding(current) {
   renderBoard();
   const cell = PATH[current.positionIndex];
   if (!cell) return;
 
-  const level = getLevelForIndex(current.positionIndex);
+  const levelByPos = getDisplayLevelForIndex(current.positionIndex);
 
-  let msg = "";
+  // 每次落點先重置樣式 / 標籤
+  commandBox.classList.remove(
+    "command-box-interaction",
+    "command-box-special",
+    "command-box-level-C"
+  );
+  if (commandMeta) commandMeta.classList.add("hidden");
+  if (commandKindBadge) commandKindBadge.classList.add("hidden");
+  if (commandLevelBadge) commandLevelBadge.classList.add("hidden");
+
+  let result = null;
 
   if (cell.type === "end") {
-    msg = handleWin(current);
+    const msg = handleWin(current);
     commandTextDiv.textContent = msg;
     btnConfirmTask.disabled = true;
     btnDrink.disabled = true;
     waitingForChoice = false;
     return;
   } else if (cell.type === "special") {
-    msg = generateSpecialCommand(current, level);
+    result = generateSpecialCommand(current, levelByPos);
   } else {
-    msg = generateNormalCommand(current, level);
+    result = generateNormalCommand(current, levelByPos);
   }
 
+  const msg = result.text;
+  const kind = result.kind;        // "self" | "interaction" | "special"
+  const lv = result.level;         // "A" | "B" | "C"
+  const isSpecial = !!result.isSpecial;
+
+  // 顯示指令文字
+  commandTextDiv.textContent = msg;
+
+  // 決定樣式 / 標籤
+  let showMeta = false;
+
+  // 互動：藍綠底 + 「互動指令」
+  if (kind === "interaction" && commandKindBadge) {
+    showMeta = true;
+    commandKindBadge.classList.remove("hidden");
+    commandBox.classList.add("command-box-interaction");
+  }
+
+  // C 級：🔥 高強度 + 紅橙邊框
+  if (lv === "C" && commandLevelBadge) {
+    showMeta = true;
+    commandLevelBadge.classList.remove("hidden");
+    commandBox.classList.add("command-box-level-C");
+  }
+
+  // 特別格：紅底 + 提示音效
+  if (isSpecial) {
+    commandBox.classList.add("command-box-special");
+    playSpecialChime();
+  }
+
+  if (commandMeta) {
+    if (showMeta) {
+      commandMeta.classList.remove("hidden");
+    } else {
+      commandMeta.classList.add("hidden");
+    }
+  }
+
+  // 撞在一起的額外懲罰文字
   const sameSpotPlayers = players.filter(
     (p) => p.positionIndex === current.positionIndex
   );
@@ -822,15 +930,6 @@ function handleLanding(current) {
   waitingForChoice = true;
   btnConfirmTask.disabled = false;
   btnDrink.disabled = drinkCount >= 2;
-}
-
-function getLevelForIndex(index) {
-  // 25% A、45% B、30% C
-  const maxIndex = PATH.length - 1;
-  const ratio = index / maxIndex;
-  if (ratio <= 0.25) return "A";
-  if (ratio <= 0.7) return "B";
-  return "C";
 }
 
 function goToNextPlayer(updateBoard = true) {
@@ -862,17 +961,7 @@ function renderBoard() {
       const pathIndex = PATH.findIndex((p) => p.r === r && p.c === c);
       if (pathIndex !== -1) {
         const info = PATH[pathIndex];
-        let level = getLevelForIndex(pathIndex);
-
-        // 根據 enabledLevels 調整顯示的格子顏色：
-        // - 只 A：所有格子都用 A 色
-        // - A+B：C 區用 B 色
-        // - A+B+C：維持原本 A/B/C 配色
-        if (!enabledLevels.has("B") && !enabledLevels.has("C")) {
-          level = "A";
-        } else if (!enabledLevels.has("C") && level === "C") {
-          level = "B";
-        }
+        const level = getDisplayLevelForIndex(pathIndex);
 
         cellDiv.classList.add("cell-path");
         if (info.type === "start") {
@@ -995,21 +1084,30 @@ function generateSpecialCommand(currentPlayer, level) {
     ? db.special
     : defaultSpecialCommands;
 
-  let list = rawList.filter((item) => {
-    const lv = item.level || "A";
-    return enabledLevels.has(lv) && lv === level;
-  });
+  // 嚴格依照「顯示用 level」抽特別格：
+  // B 區只出 B 級特別格；C 區只出 C 級特別格
+  let list = rawList.filter((item) => (item.level || "A") === level);
   if (list.length === 0) {
-    // 如果這個區段沒有符合強度設定的，就退回所有允許等級
-    list = rawList.filter((item) => enabledLevels.has(item.level || "A"));
+    // 如果資料庫裡沒有對應等級的特別格，就退回同等級的預設特別格
+    list = defaultSpecialCommands.filter((item) => (item.level || "A") === level);
   }
   if (list.length === 0) {
     list = rawList;
   }
 
-  const item = randomPick(list) || { text: "抽一張特別卡，照卡片上的指示做", level };
+  const item = randomPick(list) || {
+    text: "抽一張特別卡，照卡片上的指示做",
+    level
+  };
   const base = item.text || "抽一張特別卡，照卡片上的指示做";
-  return `${currentPlayer.name} 抽到特別格：${base}`;
+  const finalLevel = item.level || level || "A";
+
+  return {
+    text: `${currentPlayer.name} 抽到特別格：${base}`,
+    kind: "special",
+    level: finalLevel,
+    isSpecial: true
+  };
 }
 
 function generateNormalCommand(currentPlayer, level) {
@@ -1019,43 +1117,66 @@ function generateNormalCommand(currentPlayer, level) {
     ? db.normal
     : defaultNormalCommands;
 
+  // 依主題強度過濾
   let list = rawList.filter((item) => {
     const lv = item.level || "A";
     return enabledLevels.has(lv) && lv === level;
   });
   if (list.length === 0) {
-    // 如果這個區段沒有符合強度設定的，就退回所有允許等級
+    // 這一區沒有符合強度設定 → 退回到所有允許等級
     list = rawList.filter((item) => enabledLevels.has(item.level || "A"));
   }
   if (list.length === 0) {
     list = rawList;
   }
 
-  const item = randomPick(list) || { text: "[A] 說一句祝福的話給在場所有人", kind: "self", level };
+  const item = randomPick(list) || {
+    text: "[A] 說一句祝福的話給在場所有人",
+    kind: "self",
+    level
+  };
   const text = item.text || "";
   const kind = item.kind === "interaction" ? "interaction" : "self";
+  const lv = item.level || level || "A";
+
+  let finalText = "";
 
   if (kind === "interaction") {
-    // 互動時，優先跟「其他隊伍的異性」互動
+    // 互動時，優先跟其他隊伍的異性互動
     const candidates = players.filter(
-      (p) => p.id !== currentPlayer.id && p.gender !== currentPlayer.gender && p.pair !== currentPlayer.pair
+      (p) =>
+        p.id !== currentPlayer.id &&
+        p.gender !== currentPlayer.gender &&
+        p.pair !== currentPlayer.pair
     );
     const fallback = players.filter((p) => p.id !== currentPlayer.id);
-    const other = (candidates.length > 0 ? randomPick(candidates) : randomPick(fallback)) || currentPlayer;
+    const other =
+      (candidates.length > 0 ? randomPick(candidates) : randomPick(fallback)) ||
+      currentPlayer;
 
     if (text.includes("[A]") || text.includes("[B]")) {
-      return text
+      finalText = text
         .replace(/\[A\]/g, currentPlayer.name)
         .replace(/\[B\]/g, other.name);
+    } else {
+      finalText = `${currentPlayer.name} 跟 ${other.name}：${text}`;
     }
-    return `${currentPlayer.name} 跟 ${other.name}：${text}`;
   } else {
     if (text.includes("[A]")) {
-      return text.replace(/\[A\]/g, currentPlayer.name);
+      finalText = text.replace(/\[A\]/g, currentPlayer.name);
+    } else {
+      finalText = `${currentPlayer.name}：${text}`;
     }
-    return `${currentPlayer.name}：${text}`;
   }
+
+  return {
+    text: finalText,
+    kind,
+    level: lv,
+    isSpecial: false
+  };
 }
+
 
 function handleWin(player) {
   gameOver = true;
