@@ -31,6 +31,7 @@ const COLORS = [
 
 // 啟用的指令等級（A/B/C），預設 A+B
 let enabledLevels = new Set(["A", "B"]);
+let currentLevelMode = "AB";
 const PLAYER_COUNT_BOARD_SIZE = {
   2: 8,
   4: 7,
@@ -703,6 +704,8 @@ btnConfirmSettings.addEventListener("click", () => {
     enabledLevels = new Set(["B", "C"]);
   }
 
+  currentLevelMode = mode;
+
   stepSettings.classList.add("hidden");
   startNameInputFlow();
 });
@@ -890,17 +893,30 @@ function stepMove(roll, done) {
 
 function getDisplayLevelForIndex(index) {
   let level = getLevelForIndex(index);
-  // 根據 enabledLevels 調整顯示與抽指令用的等級：
-  // - 只 A：所有格子都用 A
-  // - A+B：C 區顯示為 B
-  // - B+C：A 區顯示為 B
-  if (!enabledLevels.has("B") && !enabledLevels.has("C")) {
-    level = "A";
-  } else if (!enabledLevels.has("C") && level === "C") {
-    level = "B";
-  } else if (!enabledLevels.has("A") && level === "A") {
-    level = "B";
+  const maxIndex = PATH.length - 1;
+
+  if (
+    currentLevelMode === "AB" &&
+    enabledLevels.has("A") &&
+    enabledLevels.has("B") &&
+    maxIndex > 0
+  ) {
+    const ratio = index / maxIndex;
+    level = ratio < 0.5 ? "A" : "B";
+  } else {
+    // 根據 enabledLevels 調整顯示與抽指令用的等級：
+    // - 只 A：所有格子都用 A
+    // - A+B：C 區顯示為 B
+    // - B+C：A 區顯示為 B
+    if (!enabledLevels.has("B") && !enabledLevels.has("C")) {
+      level = "A";
+    } else if (!enabledLevels.has("C") && level === "C") {
+      level = "B";
+    } else if (!enabledLevels.has("A") && level === "A") {
+      level = "B";
+    }
   }
+
   return level;
 }
 
