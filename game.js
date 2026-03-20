@@ -30,10 +30,11 @@ const COLORS = [
 
 // 啟用的指令等級（A/B/C），預設 A+B
 let enabledLevels = new Set(["A", "B"]);
-const MODE_PATH_REDUCTION = {
-  A: 0.3,
-  AB: 0.3,
-  ABC: 0.4,
+const PLAYER_COUNT_REDUCTION = {
+  2: 0.1,
+  4: 0.2,
+  6: 0.3,
+  8: 0.4,
 };
 let currentPathReduction = 0;
 
@@ -680,6 +681,8 @@ if (btnReroll) {
 // Step 1: 選擇對數
 btnStartNames.addEventListener("click", () => {
   pairCount = parseInt(pairCountSelect.value, 10);
+  const participants = pairCount * 2;
+  currentPathReduction = PLAYER_COUNT_REDUCTION[participants] ?? 0;
 
   // 先進入指令強度設定畫面
   stepPairs.classList.add("hidden");
@@ -697,8 +700,6 @@ btnConfirmSettings.addEventListener("click", () => {
     // 親密玩樂：只用 B + C
     enabledLevels = new Set(["B", "C"]);
   }
-
-  currentPathReduction = MODE_PATH_REDUCTION[mode] ?? 0;
 
   stepSettings.classList.add("hidden");
   startNameInputFlow();
