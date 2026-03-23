@@ -17,6 +17,9 @@ let isRolling = false;
 // 喝一杯次數（連續）
 let drinkCount = 0;
 let waitingForChoice = false;
+let pendingInteractionPair = null;
+
+const interactionStats = new Map();
 
 const COLORS = [
   "#ef4444",
@@ -682,6 +685,10 @@ btnConfirmTask.addEventListener("click", () => {
   if (!waitingForChoice || gameOver) return;
   drinkCount = 0; // 完成指令 → 重置喝一杯次數
   waitingForChoice = false;
+  if (pendingInteractionPair) {
+    recordInteractionPair(pendingInteractionPair.fromId, pendingInteractionPair.toId);
+    pendingInteractionPair = null;
+  }
   btnConfirmTask.disabled = true;
   btnDrink.disabled = true;
   if (btnReroll) btnReroll.disabled = true;
@@ -692,6 +699,7 @@ btnDrink.addEventListener("click", () => {
   if (!waitingForChoice || gameOver) return;
   drinkCount += 1;
   waitingForChoice = false;
+  pendingInteractionPair = null;
   btnConfirmTask.disabled = true;
   btnDrink.disabled = true;
   if (btnReroll) btnReroll.disabled = true;
@@ -834,6 +842,8 @@ function startGame() {
   isRolling = false;
   drinkCount = 0;
   waitingForChoice = false;
+  interactionStats.clear();
+  pendingInteractionPair = null;
   btnConfirmTask.disabled = true;
   btnDrink.disabled = true;
   if (btnReroll) btnReroll.disabled = true;
@@ -966,8 +976,7 @@ function handleLanding(current) {
   let result = null;
 
   if (cell.type === "end") {
-    const msg = handleWin(current);
-    commandTextDiv.textContent = msg;
+    handleWin(current);
     btnConfirmTask.disabled = true;
     btnDrink.disabled = true;
     if (btnReroll) btnReroll.disabled = true;
@@ -983,6 +992,12 @@ function handleLanding(current) {
   const kind = result.kind;        // "self" | "interaction" | "special"
   const lv = result.level;         // "A" | "B" | "C"
   const isSpecial = !!result.isSpecial;
+
+  if (kind === "interaction" && result.partnerId && result.partnerId !== current.id) {
+    pendingInteractionPair = { fromId: current.id, toId: result.partnerId };
+  } else {
+    pendingInteractionPair = null;
+  }
 
   // 顯示指令文字
   commandTextDiv.textContent = msg;
@@ -1238,6 +1253,8 @@ function generateNormalCommand(currentPlayer, level) {
 
   let finalText = "";
 
+  let partnerId = null;
+
   if (kind === "interaction") {
     // 互動時，優先跟其他隊伍的異性互動
     const candidates = players.filter(
@@ -1250,6 +1267,8 @@ function generateNormalCommand(currentPlayer, level) {
     const other =
       (candidates.length > 0 ? randomPick(candidates) : randomPick(fallback)) ||
       currentPlayer;
+
+    partnerId = other ? other.id : null;
 
     if (text.includes("[A]") || text.includes("[B]")) {
       finalText = text
@@ -1270,16 +1289,71 @@ function generateNormalCommand(currentPlayer, level) {
     text: finalText,
     kind,
     level: lv,
-    isSpecial: false
+    isSpecial: false,
+    partnerId
   };
 }
 
 
 function handleWin(player) {
   gameOver = true;
+  pendingInteractionPair = null;
   const msg = `🎉 ${player.name}，恭喜你，你可以拉最後一位異性去床上做任何事30秒鐘，遊戲結束！`;
   turnStatus.textContent = msg;
+  const summaryHtml = buildInteractionSummaryHtml();
+  if (summaryHtml) {
+    commandTextDiv.innerHTML = `<p>${msg}</p>${summaryHtml}`;
+  } else {
+    commandTextDiv.textContent = msg;
+  }
   return msg;
+}
+
+function recordInteractionPair(fromId, toId) {
+  if (!fromId || !toId || fromId === toId) return;
+  const key = createInteractionKey(fromId, toId);
+  const base = interactionStats.get(key) || {
+    aId: Math.min(fromId, toId),
+    bId: Math.max(fromId, toId),
+    count: 0
+  };
+  base.count += 1;
+  interactionStats.set(key, base);
+}
+
+function createInteractionKey(aId, bId) {
+  return [aId, bId].sort((a, b) => a - b).join("-");
+}
+
+function getPlayerNameById(id) {
+  const player = players.find((p) => p.id === id);
+  return player ? player.name : `玩家${id}`;
+}
+
+function escapeHtml(str = "") {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildInteractionSummaryHtml() {
+  if (interactionStats.size === 0) return "";
+  const entries = Array.from(interactionStats.values())
+    .map((entry) => ({
+      count: entry.count,
+      aName: getPlayerNameById(entry.aId),
+      bName: getPlayerNameById(entry.bId)
+    }))
+    .sort((a, b) => b.count - a.count);
+  const items = entries
+    .map(({ aName, bName, count }) =>
+      `<li><span>${escapeHtml(aName)} ＆ ${escapeHtml(bName)}</span><span>${count} 次</span></li>`
+    )
+    .join("");
+  return `<div class="interaction-summary"><h4>玩家互動紀錄</h4><ul>${items}</ul></div>`;
 }
 
 function randomPick(arr) {
