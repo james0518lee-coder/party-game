@@ -182,6 +182,22 @@ const EMBEDDED_COMMAND_DB = {
       "level": "B"
     },
     {
+      "text": "朦住雙眼,15秒內用嘴找出[B]身上的便利貼並撕下,失敗的喝一杯",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "朦住雙眼,由旁人指導用手摸所有異性的臉,並猜出誰才是自己伴侶,猜錯自己跟伴侶一起喝一杯,猜對可以指定一位異性喝一杯",
+      "kind": "self",
+      "level": "A"
+    },
+    {
+      "text": "朦住雙眼,讓所有異性跟你雙唇緊貼3秒,最後猜出誰是[B],猜錯自己喝一杯",
+      "kind": "interaction",
+      "level": "B"
+    },
+   
+    {
       "text": "讓[B]坐著 一邊喇舌 一邊撫摸[B]的大腿直到大腿根部 5秒鐘",
       "kind": "interaction",
       "level": "B"
@@ -207,7 +223,37 @@ const EMBEDDED_COMMAND_DB = {
       "level": "A"
     },
     {
+      "text": "與[B]單腳靠著站立30秒並互相貼近.有任一人撐不住的,兩人一起喝一杯",
+      "kind": "interaction",
+      "level": "A"
+    },
+    {
       "text": "和[B]邊喇舌邊摸胸5秒鐘",
+      "kind": "interaction",
+      "level": "C"
+    },
+    {
+      "text": "手輕輕放在[B]胸部上5秒",
+      "kind": "interaction",
+      "level": "A"
+    },
+    {
+      "text": "手輕輕來回滑過[B]的下面5秒",
+      "kind": "interaction",
+      "level": "A"
+    },
+    {
+      "text": "親吻[B]的脖子5秒,若[B]笑出來則[B]喝一杯",
+      "kind": "interaction",
+      "level": "A"
+    },
+    {
+      "text": "從後面貼著[B]的屁股,手從後面摸[B]的胸部5秒",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "跟[B]互摸下面5秒",
       "kind": "interaction",
       "level": "C"
     },
@@ -216,6 +262,7 @@ const EMBEDDED_COMMAND_DB = {
       "kind": "interaction",
       "level": "C"
     },
+    
     {
       "text": "從後面撞擊[B]的屁股 5秒鐘",
       "kind": "interaction",
@@ -261,6 +308,7 @@ const EMBEDDED_COMMAND_DB = {
       "kind": "interaction",
       "level": "A"
     },
+    
     {
       "text": "將[B]抱著懷裡5秒鐘 結束後親一下嘴",
       "kind": "interaction",
@@ -295,6 +343,10 @@ const EMBEDDED_COMMAND_DB = {
   "special": [
     {
       "text": "全場異性喝一杯,並親你臉頰一下",
+      "level": "A"
+    },
+    {
+      "text": "在所有異性胸前或背後寫一個10筆劃的字,對方猜中自己喝一杯,反之對方喝一杯",
       "level": "A"
     },
     {
