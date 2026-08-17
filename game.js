@@ -317,6 +317,16 @@ const EMBEDDED_COMMAND_DB = {
 
     // ===== C 級一般指令（10 條） =====
     {
+      "text": "指定一位異性脫一件",
+      "kind": "self",
+      "level": "C"
+    },
+    {
+      "text": "你左右各脫一件",
+      "kind": "self",
+      "level": "C"
+    },
+    {
       "text": "指定某人脫一件",
       "kind": "self",
       "level": "C"
