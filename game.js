@@ -416,10 +416,75 @@ const EMBEDDED_COMMAND_DB = {
   ]
 };
 
-// ===== 語音播報（TTS）設定：使用瀏覽器內建 speechSynthesis =====
-function speakCommand(text) {
+// ===== 語音播報（TTS）設定：支援電腦及手機瀏覽器 =====
+let partyGameVoice = null;
+let currentUtterance = null;
+let speechUnlocked = false;
+
+// 尋找裝置內可用的台灣中文／中文語音。
+function loadChineseVoice() {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+  const voices = window.speechSynthesis.getVoices();
+  partyGameVoice =
+    voices.find((voice) => voice.lang === "zh-TW") ||
+    voices.find((voice) => voice.lang && voice.lang.startsWith("zh-TW")) ||
+    voices.find((voice) => voice.lang && voice.lang.startsWith("zh")) ||
+    null;
+}
+
+// 手機的語音清單可能在網頁載入後才準備完成。
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  loadChineseVoice();
+  window.speechSynthesis.addEventListener("voiceschanged", loadChineseVoice);
+}
+
+// 手機瀏覽器通常需要在使用者直接點擊按鈕時先啟動一次語音。
+function unlockSpeech() {
   if (typeof window === "undefined") return;
-  if (!text) return;
+
+  if (!("speechSynthesis" in window)) {
+    if (!window.__partyGameTtsWarned) {
+      window.__partyGameTtsWarned = true;
+      alert("此瀏覽器不支援語音播報，請改用 Safari 或 Chrome 開啟。");
+    }
+    return;
+  }
+
+  try {
+    loadChineseVoice();
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
+
+    const utter = new SpeechSynthesisUtterance("語音功能已開啟");
+    utter.lang = partyGameVoice?.lang || "zh-TW";
+    utter.rate = 1.0;
+    utter.pitch = 1.0;
+    utter.volume = 1.0;
+    if (partyGameVoice) utter.voice = partyGameVoice;
+
+    // 保留 utterance，避免部分手機瀏覽器在播完前回收物件。
+    currentUtterance = utter;
+    utter.onstart = () => {
+      speechUnlocked = true;
+      console.log("語音功能已啟動");
+    };
+    utter.onend = () => {
+      if (currentUtterance === utter) currentUtterance = null;
+    };
+    utter.onerror = (event) => {
+      console.warn("語音啟動失敗", event.error || event);
+      if (currentUtterance === utter) currentUtterance = null;
+    };
+
+    window.speechSynthesis.speak(utter);
+  } catch (e) {
+    console.warn("unlockSpeech error", e);
+  }
+}
+
+function speakCommand(text) {
+  if (typeof window === "undefined" || !text) return;
 
   if (!("speechSynthesis" in window)) {
     if (!window.__partyGameTtsWarned) {
@@ -432,13 +497,28 @@ function speakCommand(text) {
   }
 
   try {
-    // 先停止目前正在播報的內容
+    loadChineseVoice();
     window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
 
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "zh-TW"; // 以中文為主
-    utter.rate = 1.0;      // 語速
-    utter.pitch = 1.0;     // 音高
+    utter.lang = partyGameVoice?.lang || "zh-TW";
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
+    utter.volume = 1.0;
+    if (partyGameVoice) utter.voice = partyGameVoice;
+
+    currentUtterance = utter;
+    utter.onend = () => {
+      if (currentUtterance === utter) currentUtterance = null;
+    };
+    utter.onerror = (event) => {
+      console.warn("指令語音播放失敗", event.error || event, {
+        speechUnlocked,
+        language: utter.lang
+      });
+      if (currentUtterance === utter) currentUtterance = null;
+    };
 
     window.speechSynthesis.speak(utter);
   } catch (e) {
@@ -883,7 +963,8 @@ function showConfirmStep() {
 
 btnStartGame.addEventListener("click", () => {
   // 指令資料在載入 script 時就已經從 EMBEDDED_COMMAND_DB 初始化完成
-  // 這裡直接開始遊戲即可
+  // 先在使用者直接點擊的事件中解鎖手機語音，再開始遊戲。
+  unlockSpeech();
   startGame();
 });
 
