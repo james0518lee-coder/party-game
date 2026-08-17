@@ -482,6 +482,14 @@
       font-size: 13px;
       padding: 6px 14px;
     }
+    .voice-toggle {
+      min-width: 118px;
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+    .voice-toggle.voice-off {
+      opacity: 0.72;
+    }
     .collision {
       display: inline-block;
       margin-top: 4px;
@@ -572,6 +580,9 @@
       <div class="card board-wrapper">
         <div class="board-top-row">
           <div id="turn-status" class="status"></div>
+          <button id="btn-toggle-voice" class="btn-secondary voice-toggle" type="button">
+            🔊 語音：開啟
+          </button>
           <div class="dice-box">
             <div class="dice-label">TAP TO ROLL</div>
             <div id="dice-face" class="dice-face"></div>
@@ -614,6 +625,6 @@
     <footer>提示：點骰子就會擲骰，照螢幕上的指令完成任務或喝一杯再換下一位。</footer>
   </div>
 
-  <script src="game.js?v=4"></script>
+  <script src="game.js?v=7"></script>
 </body>
 </html>
