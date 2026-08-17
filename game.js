@@ -153,6 +153,26 @@ const EMBEDDED_COMMAND_DB = {
       "level": "A"
     },
     {
+  "text": "跟[B]各咬住餅乾的一端慢慢靠近，直到其中一人放棄或兩人的嘴唇碰到，先放棄的人喝一杯",
+  "kind": "interaction",
+  "level": "B"
+},
+    {
+  "text": "用手指在[B]的背上寫一個字；[B]猜錯就親[B]一下嘴，猜對則由自己喝一杯",
+  "kind": "interaction",
+  "level": "B"
+},
+    {
+  "text": "你的雙手放在背後，慢慢的讓[B]從你的耳邊一路親到鎖骨，過程維持5秒鐘",
+  "kind": "interaction",
+  "level": "B"
+},
+    {
+       "text": "跟[B]緊貼擁抱5秒鐘，過程中由[B]指定親吻臉頰、耳朵或脖子其中一處",
+       "kind": "interaction",
+       "level": "B"
+    },
+    {
       "text": "親吻[B]的脖子5秒,若[B]笑出來則[B]喝一杯",
       "kind": "interaction",
       "level": "A"
@@ -185,7 +205,7 @@ const EMBEDDED_COMMAND_DB = {
       "level": "B"
     },
     {
-      "text": "隋便說一個你見過的人中 有想過跟你發生關係的對象",
+      "text": "隋便說一個你見過的人中 你想發生關係的對象",
       "kind": "self",
       "level": "B"
     },
@@ -200,12 +220,12 @@ const EMBEDDED_COMMAND_DB = {
       "level": "B"
     },
     {
-      "text": "從[B]背後雙手環抱五秒鐘 兩個人要緊貼",
+      "text": "從[B]背後雙手環抱腰部五秒鐘 兩個人要緊貼",
       "kind": "interaction",
       "level": "B"
     },
     {
-      "text": "隔著衣服 摸[B]的屁股5秒鐘 若[B]說沒感覺 則伸進褲子裡隔著內褲摸5秒",
+      "text": "隔著衣服 摸[B]的胸部5秒鐘 ",
       "kind": "interaction",
       "level": "B"
     },
@@ -257,6 +277,11 @@ const EMBEDDED_COMMAND_DB = {
     {
       "text": "從後面撞擊[B]的屁股 5秒鐘",
       "kind": "interaction",
+      "level": "B"
+    },
+     {
+      "text": "跟所有異性猜拳,輸的自己喝,贏的對方要親你一下.你可以最多指定一個人幫你喝一杯",
+         "kind": "self",
       "level": "B"
     },
     {
@@ -321,11 +346,22 @@ const EMBEDDED_COMMAND_DB = {
       "kind": "interaction",
       "level": "C"
     },
+         {
+  "text": "你坐在椅子上，由[B]跨坐在你腿上，兩人緊貼身體擁抱並熱吻5秒鐘",
+  "kind": "interaction",
+  "level": "C"
+},
+    {
+  "text": "蒙住[B]的眼睛，用冰塊沿著[B]指定的密部位慢慢滑動5秒，再親吻剛才滑過的位置",
+  "kind": "interaction",
+  "level": "C"
+},
     {
       "text": "指定一個人用手或下面磨蹭你下面",
       "kind": "self",
       "level": "C"
     },
+    
     {
       "text": "將你眼睛蒙住 其它異性輪流摸你胸部3秒 猜出第二位異性的名字 則其它異性都要喝一杯 猜錯的自己喝一杯",
       "kind": "interaction",
@@ -387,12 +423,24 @@ const EMBEDDED_COMMAND_DB = {
       "text": "跟全場異性緊貼擁抱5秒鐘",
       "level": "B"
     },
+     {
+      "text": "跟全場異性嘴對嘴碰一下",
+      "level": "B"
+    },
+    {
+      "text": "大家通通有,全都喝一杯",
+      "level": "B"
+    },
     {
       "text": "指定一個人跟你喇舌5秒鐘",
       "level": "B"
     },
     {
       "text": "跟全場異性喇舌5秒",
+      "level": "B"
+    },
+    {
+      "text": "所有人找離你最近的異性擁抱5秒鐘,結束後親一下",
       "level": "B"
     },
     {
