@@ -46,6 +46,7 @@ const PLAYER_COUNT_BOARD_SIZE = {
 // 結構：{ normal: { text, kind, level }[], special: { text, level }[] }
 const EMBEDDED_COMMAND_DB = {
   "normal": [
+    // ===== A 級一般指令（25 條） =====
     {
       "text": "自行喝一杯",
       "kind": "self",
@@ -92,16 +93,6 @@ const EMBEDDED_COMMAND_DB = {
       "level": "A"
     },
     {
-      "text": "到[B]耳朵旁小聲的說dirty talk 若[B]沒有滿意, 自己喝一杯",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
-      "text": "跟[B]十指交扣 直到下一次輪到你或[B]",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
       "text": "對[B]說第一次見面的印象",
       "kind": "interaction",
       "level": "A"
@@ -127,44 +118,9 @@ const EMBEDDED_COMMAND_DB = {
       "level": "A"
     },
     {
-      "text": "隋便說一個你見過的人中 有想過跟你發生關係的對象",
-      "kind": "self",
-      "level": "B"
-    },
-    {
-      "text": "兩人貼在一起 一手摟著[B]的腰 一手餵[B]喝酒",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
       "text": "在[B]耳朵旁小聲今晚想對[B]做的事 若[B]拒絕 自己喝一杯",
       "kind": "interaction",
       "level": "A"
-    },
-    {
-      "text": "把頭埋在[B]的胸部磨蹭5秒鐘",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
-      "text": "從[B]背後雙手環抱五秒鐘 兩個人要緊貼",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
-      "text": "隔著衣服 摸[B]的屁股5秒鐘 若[B]說沒感覺 則伸進褲子裡隔著內褲摸5秒",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
-      "text": "指定某人脫一件",
-      "kind": "self",
-      "level": "C"
-    },
-    {
-      "text": "手放在[B]的大腿上 直到下次你或[B]開始動作",
-      "kind": "interaction",
-      "level": "B"
     },
     {
       "text": "由[B]餵你吃桌上任何一樣菜 並親你臉一下",
@@ -172,50 +128,9 @@ const EMBEDDED_COMMAND_DB = {
       "level": "A"
     },
     {
-      "text": "跟[B]猜拳 輸的要脫掉褲子 被狠狠的打屁股",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
-      "text": "雙手扶著[B]的頭的方式喇舌5秒鐘",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
-      "text": "朦住雙眼,15秒內用嘴找出[B]身上的便利貼並撕下,失敗的喝一杯",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
       "text": "朦住雙眼,由旁人指導用手摸所有異性的臉,並猜出誰才是自己伴侶,猜錯自己跟伴侶一起喝一杯,猜對可以指定一位異性喝一杯",
       "kind": "self",
       "level": "A"
-    },
-    {
-      "text": "朦住雙眼,讓所有異性跟你雙唇緊貼3秒,最後猜出誰是[B],猜錯自己喝一杯",
-      "kind": "interaction",
-      "level": "B"
-    },
-   
-    {
-      "text": "讓[B]坐著 一邊喇舌 一邊撫摸[B]的大腿直到大腿根部 5秒鐘",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
-      "text": "跟[B]猜拳 贏的要幫輸的人脫一件",
-      "kind": "interaction",
-      "level": "C"
-    },
-    {
-      "text": "手伸到[B]的褲子裡亂摸5秒鐘",
-      "kind": "interaction",
-      "level": "B"
-    },
-    {
-      "text": "喝一口酒 餵到[B]的嘴裡",
-      "kind": "interaction",
-      "level": "B"
     },
     {
       "text": "指定任何一個人喝一杯",
@@ -226,11 +141,6 @@ const EMBEDDED_COMMAND_DB = {
       "text": "與[B]單腳靠著站立30秒並互相貼近.有任一人撐不住的,兩人一起喝一杯",
       "kind": "interaction",
       "level": "A"
-    },
-    {
-      "text": "和[B]邊喇舌邊摸胸5秒鐘",
-      "kind": "interaction",
-      "level": "C"
     },
     {
       "text": "手輕輕放在[B]胸部上5秒",
@@ -248,30 +158,106 @@ const EMBEDDED_COMMAND_DB = {
       "level": "A"
     },
     {
+      "text": "跟[B]玩互咬衛生紙的遊戲,到最後放棄的人喝一杯",
+      "kind": "interaction",
+      "level": "A"
+    },
+    {
+      "text": "跟[B]一起喝完一杯酒",
+      "kind": "interaction",
+      "level": "A"
+    },
+    {
+      "text": "跟[B]旁邊的異性換位置",
+      "kind": "interaction",
+      "level": "A"
+    },
+
+    // ===== B 級一般指令（23 條） =====
+    {
+      "text": "到[B]耳朵旁小聲的說dirty talk 若[B]沒有滿意, 自己喝一杯",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "跟[B]十指交扣 直到下一次輪到你或[B]",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "隋便說一個你見過的人中 有想過跟你發生關係的對象",
+      "kind": "self",
+      "level": "B"
+    },
+    {
+      "text": "兩人貼在一起 一手摟著[B]的腰 一手餵[B]喝酒",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "把頭埋在[B]的胸部磨蹭5秒鐘",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "從[B]背後雙手環抱五秒鐘 兩個人要緊貼",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "隔著衣服 摸[B]的屁股5秒鐘 若[B]說沒感覺 則伸進褲子裡隔著內褲摸5秒",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "手放在[B]的大腿上 直到下次你或[B]開始動作",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "跟[B]猜拳 輸的要脫掉褲子 被狠狠的打屁股",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "雙手扶著[B]的頭的方式喇舌5秒鐘",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "朦住雙眼,15秒內用嘴找出[B]身上的便利貼並撕下,失敗的喝一杯",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "朦住雙眼,讓所有異性跟你雙唇緊貼3秒,最後猜出誰是[B],猜錯自己喝一杯",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "讓[B]坐著 一邊喇舌 一邊撫摸[B]的大腿直到大腿根部 5秒鐘",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "手伸到[B]的褲子裡亂摸5秒鐘",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
+      "text": "喝一口酒 餵到[B]的嘴裡",
+      "kind": "interaction",
+      "level": "B"
+    },
+    {
       "text": "從後面貼著[B]的屁股,手從後面摸[B]的胸部5秒",
       "kind": "interaction",
       "level": "B"
     },
     {
-      "text": "跟[B]互摸下面5秒",
-      "kind": "interaction",
-      "level": "C"
-    },
-    {
-      "text": "坐在[B]上面搖5秒鐘",
-      "kind": "interaction",
-      "level": "C"
-    },
-    
-    {
       "text": "從後面撞擊[B]的屁股 5秒鐘",
       "kind": "interaction",
       "level": "B"
-    },
-    {
-      "text": "脫去[B]的褲子 從後面撞擊[B]的屁股5秒鐘",
-      "kind": "interaction",
-      "level": "C"
     },
     {
       "text": "拉開[B]的上衣,摸[B]的胸部5秒鐘",
@@ -279,36 +265,15 @@ const EMBEDDED_COMMAND_DB = {
       "level": "B"
     },
     {
-      "text": "指定一個人用手或下面磨蹭你下面",
-      "kind": "self",
-      "level": "C"
-    },
-    {
       "text": "讓[B]坐在你大腿或 直到你或[B]下次動作",
       "kind": "interaction",
       "level": "B"
-    },
-    {
-      "text": "跟[B]玩互咬衛生紙的遊戲,到最後放棄的人喝一杯",
-      "kind": "interaction",
-      "level": "A"
     },
     {
       "text": "將你眼睛蒙住 其它異性輪流親你一下嘴唇 猜出最後位異性的名字 則其它異性都要喝一杯 猜錯的自己喝一杯",
       "kind": "interaction",
       "level": "B"
     },
-    {
-      "text": "將你眼睛蒙住 其它異性輪流摸你胸部3秒 猜出第二位異性的名字 則其它異性都要喝一杯 猜錯的自己喝一杯",
-      "kind": "interaction",
-      "level": "C"
-    },
-    {
-      "text": "跟[B]一起喝完一杯酒",
-      "kind": "interaction",
-      "level": "A"
-    },
-    
     {
       "text": "將[B]抱著懷裡5秒鐘 結束後親一下嘴",
       "kind": "interaction",
@@ -324,6 +289,48 @@ const EMBEDDED_COMMAND_DB = {
       "kind": "interaction",
       "level": "B"
     },
+
+    // ===== C 級一般指令（10 條） =====
+    {
+      "text": "指定某人脫一件",
+      "kind": "self",
+      "level": "C"
+    },
+    {
+      "text": "跟[B]猜拳 贏的要幫輸的人脫一件",
+      "kind": "interaction",
+      "level": "C"
+    },
+    {
+      "text": "和[B]邊喇舌邊摸胸5秒鐘",
+      "kind": "interaction",
+      "level": "C"
+    },
+    {
+      "text": "跟[B]互摸下面5秒",
+      "kind": "interaction",
+      "level": "C"
+    },
+    {
+      "text": "坐在[B]上面搖5秒鐘",
+      "kind": "interaction",
+      "level": "C"
+    },
+    {
+      "text": "脫去[B]的褲子 從後面撞擊[B]的屁股5秒鐘",
+      "kind": "interaction",
+      "level": "C"
+    },
+    {
+      "text": "指定一個人用手或下面磨蹭你下面",
+      "kind": "self",
+      "level": "C"
+    },
+    {
+      "text": "將你眼睛蒙住 其它異性輪流摸你胸部3秒 猜出第二位異性的名字 則其它異性都要喝一杯 猜錯的自己喝一杯",
+      "kind": "interaction",
+      "level": "C"
+    },
     {
       "text": "跟[B]猜拳輸的脫一件",
       "kind": "interaction",
@@ -333,14 +340,11 @@ const EMBEDDED_COMMAND_DB = {
       "text": "溫柔的撫摸[B]的下面5秒鐘",
       "kind": "interaction",
       "level": "C"
-    },
-    {
-      "text": "跟[B]旁邊的異性換位置",
-      "kind": "interaction",
-      "level": "A"
     }
   ],
+
   "special": [
+    // ===== A 級特別格指令（9 條） =====
     {
       "text": "全場異性喝一杯,並親你臉頰一下",
       "level": "A"
@@ -348,14 +352,6 @@ const EMBEDDED_COMMAND_DB = {
     {
       "text": "在所有異性胸前或背後寫一個10筆劃的字,對方猜中自己喝一杯,反之對方喝一杯",
       "level": "A"
-    },
-    {
-      "text": "全場異性脫一件",
-      "level": "C"
-    },
-    {
-      "text": "你之外所有人脫一件",
-      "level": "C"
     },
     {
       "text": "跟所有人猜拳,輸的喝.你可以最多指定一個人幫你喝一杯",
@@ -369,6 +365,24 @@ const EMBEDDED_COMMAND_DB = {
       "text": "跟全場異性嘴對嘴碰一下",
       "level": "A"
     },
+    {
+      "text": "所有人找離你最近的異性擁包5秒鐘",
+      "level": "A"
+    },
+    {
+      "text": "大家通通有,全都喝一杯",
+      "level": "A"
+    },
+    {
+      "text": "跟所有異性磨鼻子5秒",
+      "level": "A"
+    },
+    {
+      "text": "指定一個人跟你猜拳 總共猜5次 輸一次就加一杯 最多3杯",
+      "level": "A"
+    },
+
+    // ===== B 級特別格指令（6 條） =====
     {
       "text": "跟全場異性緊貼擁抱5秒鐘",
       "level": "B"
@@ -390,28 +404,22 @@ const EMBEDDED_COMMAND_DB = {
       "level": "B"
     },
     {
-      "text": "讓全場異性輸流服務你5 秒鐘 每個人的動作由你指定",
-      "level": "C"
-    },
-    {
       "text": "找離你最近的異性喇舌5秒鐘",
       "level": "B"
     },
+
+    // ===== C 級特別格指令（3 條） =====
     {
-      "text": "所有人找離你最近的異性擁包5秒鐘",
-      "level": "A"
+      "text": "全場異性脫一件",
+      "level": "C"
     },
     {
-      "text": "大家通通有,全都喝一杯",
-      "level": "A"
+      "text": "你之外所有人脫一件",
+      "level": "C"
     },
     {
-      "text": "跟所有異性磨鼻子5秒",
-      "level": "A"
-    },
-    {
-      "text": "指定一個人跟你猜拳 總共猜5次 輸一次就加一杯 最多3杯",
-      "level": "A"
+      "text": "讓全場異性輸流服務你5 秒鐘 每個人的動作由你指定",
+      "level": "C"
     }
   ]
 };
@@ -420,6 +428,7 @@ const EMBEDDED_COMMAND_DB = {
 let partyGameVoice = null;
 let currentUtterance = null;
 let speechUnlocked = false;
+let speechEnabled = localStorage.getItem("partyGameSpeechEnabled") !== "false";
 
 // 尋找裝置內可用的台灣中文／中文語音。
 function loadChineseVoice() {
@@ -484,7 +493,7 @@ function unlockSpeech() {
 }
 
 function speakCommand(text) {
-  if (typeof window === "undefined" || !text) return;
+  if (typeof window === "undefined" || !text || !speechEnabled) return;
 
   if (!("speechSynthesis" in window)) {
     if (!window.__partyGameTtsWarned) {
@@ -797,6 +806,7 @@ const btnNextName = document.getElementById("btn-next-name");
 
 const playerListDiv = document.getElementById("player-list");
 const btnStartGame = document.getElementById("btn-start-game");
+const btnToggleVoice = document.getElementById("btn-toggle-voice");
 
 const turnStatus = document.getElementById("turn-status");
 const diceFace = document.getElementById("dice-face");
@@ -811,6 +821,32 @@ const btnReroll = document.getElementById("btn-reroll");
 const btnDrink = document.getElementById("btn-drink");
 const board = document.getElementById("board");
 const legendDiv = document.getElementById("legend");
+
+function updateVoiceButton() {
+  if (!btnToggleVoice) return;
+  btnToggleVoice.textContent = speechEnabled
+    ? "🔊 語音：開啟"
+    : "🔇 語音：關閉";
+  btnToggleVoice.classList.toggle("voice-off", !speechEnabled);
+  btnToggleVoice.setAttribute("aria-pressed", String(speechEnabled));
+}
+
+if (btnToggleVoice) {
+  updateVoiceButton();
+  btnToggleVoice.addEventListener("click", () => {
+    speechEnabled = !speechEnabled;
+    localStorage.setItem("partyGameSpeechEnabled", String(speechEnabled));
+    updateVoiceButton();
+
+    if (speechEnabled) {
+      // 直接在按鍵事件中啟動語音，符合手機瀏覽器的播放限制。
+      unlockSpeech();
+    } else if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      currentUtterance = null;
+    }
+  });
+}
 
 // 綁定指令按鈕事件
 btnConfirmTask.addEventListener("click", () => {
@@ -964,7 +1000,7 @@ function showConfirmStep() {
 btnStartGame.addEventListener("click", () => {
   // 指令資料在載入 script 時就已經從 EMBEDDED_COMMAND_DB 初始化完成
   // 先在使用者直接點擊的事件中解鎖手機語音，再開始遊戲。
-  unlockSpeech();
+  if (speechEnabled) unlockSpeech();
   startGame();
 });
 
