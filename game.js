@@ -294,6 +294,9 @@ const btnStartGame = document.getElementById("btn-start-game");
 
 const turnStatus = document.getElementById("turn-status");
 const diceFace = document.getElementById("dice-face");
+const rollResult = document.getElementById("roll-result");
+const turnProgress = document.getElementById("turn-progress");
+const progressList = document.getElementById("progress-list");
 const boardTrack = document.getElementById("board-track");
 const commandBox = document.getElementById("command-box");
 const commandMeta = document.getElementById("command-meta");
@@ -499,10 +502,14 @@ function startGame() {
 
   renderBoard();
   renderLegend();
+  renderProgress();
   updateTurnStatus();
   commandTextDiv.textContent = "指令會出現在這裡";
+  rollResult.textContent = "準備擲骰";
+  rollResult.classList.remove("roll-result-strong");
   updateRerollStatus();
   renderDiceFace(0);
+  diceFace.disabled = false;
 }
 
 // 直接點骰子圖示擲骰子
@@ -511,7 +518,10 @@ diceFace.addEventListener("click", () => {
   if (gameOver || isRolling || waitingForChoice) return;
 
   isRolling = true;
+  diceFace.disabled = true;
   board.classList.add("board-zoom");
+  rollResult.textContent = "骰子轉動中…";
+  rollResult.classList.remove("roll-result-strong");
 
   let ticks = 0;
   const totalDuration = 2000;
@@ -527,6 +537,8 @@ diceFace.addEventListener("click", () => {
       clearInterval(interval);
       const finalRoll = Math.floor(Math.random() * 6) + 1;
       renderDiceFace(finalRoll, false);
+      rollResult.textContent = `擲出 ${finalRoll} 點`;
+      rollResult.classList.add("roll-result-strong");
       stepMove(finalRoll, () => {
         isRolling = false;
         if (!gameOver) {
@@ -561,6 +573,8 @@ function stepMove(roll, done) {
     current.positionIndex += 1;
     moved += 1;
     renderBoard();
+    renderProgress();
+    updateTurnProgress();
     setTimeout(moveOne, 500);
   };
 
@@ -679,6 +693,7 @@ function handleLanding(current) {
   btnConfirmTask.disabled = false;
   btnDrink.disabled = drinkCount >= 2;
   if (btnReroll) btnReroll.disabled = rerollUsedThisTurn;
+  diceFace.disabled = true;
   updateRerollStatus();
 }
 
@@ -688,7 +703,11 @@ function goToNextPlayer(updateBoard = true) {
   rerollUsedThisTurn = false;
   updateTurnStatus();
   updateRerollStatus();
+  rollResult.textContent = "準備擲骰";
+  rollResult.classList.remove("roll-result-strong");
+  diceFace.disabled = false;
   if (updateBoard) renderBoard();
+  renderProgress();
 }
 
 function updateRerollStatus() {
@@ -704,7 +723,59 @@ function updateTurnStatus() {
     turnStatus.textContent = "";
     return;
   }
-  turnStatus.innerHTML = `現在輪到：<span class="status-name">${current.name}</span>`;
+  turnStatus.innerHTML = `<span class="status-name">${escapeHtml(current.name)}</span>`;
+  updateTurnProgress();
+}
+
+function updateTurnProgress() {
+  if (!turnProgress) return;
+  const current = players[currentPlayerIndex];
+  if (!current || PATH.length === 0) {
+    turnProgress.textContent = "";
+    return;
+  }
+  const endIndex = PATH.length - 1;
+  const remaining = Math.max(0, endIndex - current.positionIndex);
+  const percent = endIndex > 0
+    ? Math.round((current.positionIndex / endIndex) * 100)
+    : 100;
+  turnProgress.textContent = `進度 ${percent}% · 距離終點 ${remaining} 格`;
+}
+
+function renderProgress() {
+  if (!progressList || PATH.length === 0) return;
+  progressList.innerHTML = "";
+  const endIndex = PATH.length - 1;
+
+  players.forEach((player, index) => {
+    const percent = endIndex > 0
+      ? Math.min(100, Math.round((player.positionIndex / endIndex) * 100))
+      : 100;
+    const item = document.createElement("div");
+    item.className = "progress-item";
+    if (index === currentPlayerIndex) item.classList.add("progress-item-current");
+
+    const name = document.createElement("div");
+    name.className = "progress-name";
+    name.textContent = player.name;
+
+    const track = document.createElement("div");
+    track.className = "progress-track";
+    const fill = document.createElement("div");
+    fill.className = "progress-fill";
+    fill.style.width = `${percent}%`;
+    fill.style.backgroundColor = player.color;
+    track.appendChild(fill);
+
+    const value = document.createElement("div");
+    value.className = "progress-value";
+    value.textContent = `${percent}%`;
+
+    item.appendChild(name);
+    item.appendChild(track);
+    item.appendChild(value);
+    progressList.appendChild(item);
+  });
 }
 
 function renderBoard() {
@@ -800,13 +871,18 @@ function renderLegend() {
 // 骰子渲染
 function renderDiceFace(value, rolling = false) {
   diceFace.innerHTML = "";
+  diceFace.classList.remove("dice-ready");
   if (rolling) {
     diceFace.classList.add("dice-rolling");
   } else {
     diceFace.classList.remove("dice-rolling");
   }
 
-  if (value <= 0) return;
+  if (value <= 0) {
+    diceFace.classList.add("dice-ready");
+    diceFace.textContent = "擲";
+    return;
+  }
 
   const pattern = getDicePattern(value);
   for (let i = 0; i < 9; i++) {

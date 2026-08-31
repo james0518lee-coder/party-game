@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>派對飛行棋</title>
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=10" />
 </head>
 <body>
   <div class="app-shell">
@@ -84,25 +84,27 @@
     <!-- Step 4: game board -->
     <section id="step-game" class="section hidden">
       <div class="card board-wrapper">
-        <div class="board-top-row">
-          <div id="turn-status" class="status"></div>
+        <div class="play-stage">
+          <div class="turn-panel">
+            <div class="turn-kicker">現在輪到</div>
+            <div id="turn-status" class="status"></div>
+            <div id="turn-progress" class="turn-progress" aria-live="polite"></div>
+          </div>
+          <div class="dice-box">
+            <div class="dice-label">點骰子開始</div>
+            <button id="dice-face" class="dice-face" type="button" aria-label="擲骰子"></button>
+            <div id="roll-result" class="roll-result" aria-live="polite">準備擲骰</div>
+          </div>
           <button id="btn-toggle-voice" class="btn-secondary voice-toggle" type="button">
             🔊 語音：開啟
           </button>
-          <div class="dice-box">
-            <div class="dice-label">TAP TO ROLL</div>
-            <button id="dice-face" class="dice-face" type="button" aria-label="擲骰子"></button>
-          </div>
         </div>
-        <div class="board-layout">
-          <div class="player-panel">
-            <div class="legend-title">目前玩家</div>
-            <div id="legend" class="legend"></div>
-          </div>
-          <div id="board" class="board">
-            <div id="board-track" class="board-track"></div>
-          </div>
+
+        <div class="race-panel">
+          <div class="race-title">玩家進度</div>
+          <div id="progress-list" class="progress-list"></div>
         </div>
+
         <div class="command-box" id="command-box">
           <div id="command-meta" class="command-meta hidden">
             <span
@@ -126,15 +128,27 @@
           </div>
           <div id="reroll-status" class="reroll-status" aria-live="polite"></div>
         </div>
+
+        <details class="map-details">
+          <summary>查看地圖（遊戲時不必一直看）</summary>
+          <div class="board-layout">
+            <div class="player-panel">
+              <div class="legend-title">玩家顏色</div>
+              <div id="legend" class="legend"></div>
+            </div>
+            <div id="board" class="board">
+              <div id="board-track" class="board-track"></div>
+            </div>
+          </div>
+        </details>
       </div>
     </section>
 
     <footer>提示：每回合最多重抽一次；完成、替代或跳過任務後再換下一位。</footer>
   </div>
 
-  <script src="commands.js?v=8"></script>
-  <script src="speech.js?v=8"></script>
-  <script src="game.js?v=8"></script>
+  <script src="commands.js?v=10"></script>
+  <script src="speech.js?v=10"></script>
+  <script src="game.js?v=10"></script>
 </body>
 </html>
-
