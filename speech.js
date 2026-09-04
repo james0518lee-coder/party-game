@@ -125,6 +125,19 @@ function updateVoiceButton() {
   button.setAttribute("aria-pressed", String(speechEnabled));
 }
 
+// 供管理後台即時更新語音預設值。
+window.applyRemoteVoiceDefault = function applyRemoteVoiceDefault(enabled) {
+  speechEnabled = Boolean(enabled);
+  try {
+    localStorage.setItem("partyGameSpeechEnabled", String(speechEnabled));
+  } catch (_) {}
+  updateVoiceButton();
+  if (!speechEnabled && "speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+    currentUtterance = null;
+  }
+};
+
 if ("speechSynthesis" in window) {
   loadChineseVoice();
   window.speechSynthesis.addEventListener("voiceschanged", loadChineseVoice);
@@ -152,4 +165,3 @@ if (voiceToggleButton) {
 window.addEventListener("pagehide", () => {
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
 });
-

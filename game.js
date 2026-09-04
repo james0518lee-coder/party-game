@@ -18,9 +18,23 @@ let isRolling = false;
 let drinkCount = 0;
 let waitingForChoice = false;
 let pendingInteractionPair = null;
-let rerollUsedThisTurn = false;
+let rerollsUsedThisTurn = 0;
 let interactionMode = "partner";
 const commandDecks = new Map();
+
+let remoteConfigVersion = 0;
+let remoteConfigTimer = null;
+const runtimeRules = {
+  firstPairFemaleMultiplier: 0.6,
+  firstPairMaleMultiplier: 1.3,
+  maxRerollsPerTurn: 1,
+  maxConsecutiveDrinks: 2,
+  diceRollDurationMs: 2000,
+  moveStepDelayMs: 500,
+  pollIntervalSeconds: 3,
+  voiceDefaultEnabled: true,
+  specialTileCounts: { A: 2, B: 3, C: 1 },
+};
 
 const interactionStats = new Map();
 
@@ -95,11 +109,12 @@ let commandDB = null;
 // 直接從嵌入的 EMBEDDED_COMMAND_DB 初始化指令資料庫（不再讀取 commands.json / localStorage）
 (function initEmbeddedCommandDB() {
   try {
-    const normalRaw = Array.isArray(EMBEDDED_COMMAND_DB.normal)
-      ? EMBEDDED_COMMAND_DB.normal
+    const embedded = window.EMBEDDED_COMMAND_DB || {};
+    const normalRaw = Array.isArray(embedded.normal)
+      ? embedded.normal
       : [];
-    const specialRaw = Array.isArray(EMBEDDED_COMMAND_DB.special)
-      ? EMBEDDED_COMMAND_DB.special
+    const specialRaw = Array.isArray(embedded.special)
+      ? embedded.special
       : [];
 
     const normal = normalRaw.map(normalizeNormalItem);
@@ -244,9 +259,9 @@ function assignRandomSpecialTiles() {
   const pick = (arr, count) => arr.slice(0, Math.min(count, arr.length));
 
   const chosen = [
-    ...pick(aIdx, 2),
-    ...pick(bIdx, 3),
-    ...pick(cIdx, 1),
+    ...pick(aIdx, runtimeRules.specialTileCounts.A),
+    ...pick(bIdx, runtimeRules.specialTileCounts.B),
+    ...pick(cIdx, runtimeRules.specialTileCounts.C),
   ];
 
   for (const i of chosen) {
@@ -340,8 +355,8 @@ if (btnReroll) {
   btnReroll.addEventListener("click", () => {
     if (!waitingForChoice || gameOver) return;
     const current = players[currentPlayerIndex];
-    if (!current || rerollUsedThisTurn) return;
-    rerollUsedThisTurn = true;
+    if (!current || rerollsUsedThisTurn >= runtimeRules.maxRerollsPerTurn) return;
+    rerollsUsedThisTurn += 1;
     updateRerollStatus();
     handleLanding(current);
   });
@@ -484,7 +499,7 @@ function startGame() {
   interactionStats.clear();
   commandDecks.clear();
   pendingInteractionPair = null;
-  rerollUsedThisTurn = false;
+  rerollsUsedThisTurn = 0;
   btnConfirmTask.disabled = true;
   btnDrink.disabled = true;
   if (btnReroll) btnReroll.disabled = true;
@@ -524,8 +539,8 @@ diceFace.addEventListener("click", () => {
   rollResult.classList.remove("roll-result-strong");
 
   let ticks = 0;
-  const totalDuration = 2000;
-  const intervalMs = 100;
+  const totalDuration = runtimeRules.diceRollDurationMs;
+  const intervalMs = Math.max(50, Math.min(150, Math.round(totalDuration / 20)));
   const maxTicks = Math.floor(totalDuration / intervalMs);
 
   const interval = setInterval(() => {
@@ -575,7 +590,7 @@ function stepMove(roll, done) {
     renderBoard();
     renderProgress();
     updateTurnProgress();
-    setTimeout(moveOne, 500);
+    setTimeout(moveOne, runtimeRules.moveStepDelayMs);
   };
 
   moveOne();
@@ -691,8 +706,8 @@ function handleLanding(current) {
 
   waitingForChoice = true;
   btnConfirmTask.disabled = false;
-  btnDrink.disabled = drinkCount >= 2;
-  if (btnReroll) btnReroll.disabled = rerollUsedThisTurn;
+  btnDrink.disabled = drinkCount >= runtimeRules.maxConsecutiveDrinks;
+  if (btnReroll) btnReroll.disabled = rerollsUsedThisTurn >= runtimeRules.maxRerollsPerTurn;
   diceFace.disabled = true;
   updateRerollStatus();
 }
@@ -700,7 +715,7 @@ function handleLanding(current) {
 function goToNextPlayer(updateBoard = true) {
   if (gameOver) return;
   currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-  rerollUsedThisTurn = false;
+  rerollsUsedThisTurn = 0;
   updateTurnStatus();
   updateRerollStatus();
   rollResult.textContent = "準備擲骰";
@@ -712,9 +727,10 @@ function goToNextPlayer(updateBoard = true) {
 
 function updateRerollStatus() {
   if (!rerollStatus) return;
-  rerollStatus.textContent = rerollUsedThisTurn
-    ? "本回合已使用重抽機會"
-    : "本回合可重抽 1 次";
+  const remaining = Math.max(0, runtimeRules.maxRerollsPerTurn - rerollsUsedThisTurn);
+  rerollStatus.textContent = remaining > 0
+    ? `本回合還可重抽 ${remaining} 次`
+    : "本回合已無重抽機會";
 }
 
 function updateTurnStatus() {
@@ -1001,10 +1017,10 @@ function pickCrossGroupPartner(candidates, currentPlayer) {
 
   if (currentPlayer.gender === "M") {
     firstPairTargetGender = "F";
-    probabilityMultiplier = 0.6;
+    probabilityMultiplier = runtimeRules.firstPairFemaleMultiplier;
   } else if (currentPlayer.gender === "F") {
     firstPairTargetGender = "M";
-    probabilityMultiplier = 1.3;
+    probabilityMultiplier = runtimeRules.firstPairMaleMultiplier;
   }
 
   const adjustedTarget = candidates.find(
@@ -1169,3 +1185,163 @@ function randomPick(arr) {
   const idx = Math.floor(Math.random() * arr.length);
   return arr[idx];
 }
+
+function boundedNumber(value, fallback, min, max, integer = false) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  const bounded = Math.min(max, Math.max(min, parsed));
+  return integer ? Math.round(bounded) : bounded;
+}
+
+function applyRemoteGameConfig(payload) {
+  const config = payload?.config;
+  const version = Number(payload?.version || 0);
+  if (!config || !config.rules || version <= remoteConfigVersion) return;
+
+  const rules = config.rules;
+  let specialLayoutChanged = false;
+  runtimeRules.firstPairFemaleMultiplier = boundedNumber(
+    rules.firstPairFemaleMultiplier,
+    runtimeRules.firstPairFemaleMultiplier,
+    0,
+    3
+  );
+  runtimeRules.firstPairMaleMultiplier = boundedNumber(
+    rules.firstPairMaleMultiplier,
+    runtimeRules.firstPairMaleMultiplier,
+    0,
+    3
+  );
+  runtimeRules.maxRerollsPerTurn = boundedNumber(
+    rules.maxRerollsPerTurn,
+    runtimeRules.maxRerollsPerTurn,
+    0,
+    10,
+    true
+  );
+  runtimeRules.maxConsecutiveDrinks = boundedNumber(
+    rules.maxConsecutiveDrinks,
+    runtimeRules.maxConsecutiveDrinks,
+    0,
+    10,
+    true
+  );
+  runtimeRules.diceRollDurationMs = boundedNumber(
+    rules.diceRollDurationMs,
+    runtimeRules.diceRollDurationMs,
+    200,
+    10000,
+    true
+  );
+  runtimeRules.moveStepDelayMs = boundedNumber(
+    rules.moveStepDelayMs,
+    runtimeRules.moveStepDelayMs,
+    50,
+    3000,
+    true
+  );
+  runtimeRules.pollIntervalSeconds = boundedNumber(
+    rules.pollIntervalSeconds,
+    runtimeRules.pollIntervalSeconds,
+    1,
+    60,
+    true
+  );
+
+  for (const level of ["A", "B", "C"]) {
+    const nextCount = boundedNumber(
+      rules.specialTileCounts?.[level],
+      runtimeRules.specialTileCounts[level],
+      0,
+      20,
+      true
+    );
+    if (nextCount !== runtimeRules.specialTileCounts[level]) specialLayoutChanged = true;
+    runtimeRules.specialTileCounts[level] = nextCount;
+  }
+
+  for (const participantCount of [2, 4, 6, 8]) {
+    PLAYER_COUNT_BOARD_SIZE[participantCount] = boundedNumber(
+      rules.boardSizes?.[participantCount],
+      PLAYER_COUNT_BOARD_SIZE[participantCount],
+      3,
+      15,
+      true
+    );
+  }
+
+  if (Array.isArray(config.normalCommands) && config.normalCommands.length > 0) {
+    const normal = config.normalCommands.map(normalizeNormalItem);
+    const special = Array.isArray(config.specialCommands)
+      ? config.specialCommands.map(normalizeSpecialItem)
+      : commandDB?.special || [];
+    commandDB = { normal, special };
+    commandDecks.clear();
+  }
+
+  if (Array.isArray(config.ultimateCards) && config.ultimateCards.length > 0) {
+    window.ULTIMATE_PRIVILEGE_CARDS = config.ultimateCards.map((card) => ({
+      title: String(card.title || "終極特權卡"),
+      text: String(card.text || "")
+    }));
+  }
+
+  if (typeof window.applyRemoteVoiceDefault === "function") {
+    window.applyRemoteVoiceDefault(Boolean(rules.voiceDefaultEnabled));
+  }
+
+  // 遊戲進行中也立即套用棋盤尺寸與特別格數量。
+  if (players.length > 0 && !gameOver) {
+    const nextSize = PLAYER_COUNT_BOARD_SIZE[players.length] ?? currentBoardSize;
+    let boardLayoutChanged = false;
+    if (nextSize !== currentBoardSize) {
+      const oldEnd = Math.max(1, PATH.length - 1);
+      const ratios = players.map((player) => player.positionIndex / oldEnd);
+      currentBoardSize = nextSize;
+      PATH = buildPathForSize(currentBoardSize);
+      const newEnd = Math.max(0, PATH.length - 1);
+      players.forEach((player, index) => {
+        player.positionIndex = Math.min(newEnd, Math.round(ratios[index] * newEnd));
+      });
+      boardLayoutChanged = true;
+    }
+    if (specialLayoutChanged || boardLayoutChanged) {
+      assignRandomSpecialTiles();
+      renderBoard();
+      renderProgress();
+      updateTurnProgress();
+    }
+  }
+
+  if (waitingForChoice) {
+    btnDrink.disabled = drinkCount >= runtimeRules.maxConsecutiveDrinks;
+    if (btnReroll) {
+      btnReroll.disabled = rerollsUsedThisTurn >= runtimeRules.maxRerollsPerTurn;
+    }
+  }
+  updateRerollStatus();
+  remoteConfigVersion = version;
+  console.log(`Remote game config applied: version ${version}`);
+}
+
+async function syncRemoteGameConfig() {
+  const url = window.PARTY_GAME_CONFIG_URL;
+  if (!url) return;
+
+  try {
+    const response = await fetch(url, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    applyRemoteGameConfig(await response.json());
+  } catch (error) {
+    console.warn("後台設定暫時無法同步，繼續使用目前設定", error);
+  } finally {
+    clearTimeout(remoteConfigTimer);
+    remoteConfigTimer = setTimeout(
+      syncRemoteGameConfig,
+      runtimeRules.pollIntervalSeconds * 1000
+    );
+  }
+}
+
+window.addEventListener("pagehide", () => clearTimeout(remoteConfigTimer));
+void syncRemoteGameConfig();
