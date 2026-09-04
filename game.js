@@ -980,12 +980,46 @@ function selectInteractionPartner(currentPlayer) {
   );
 
   return (
-    randomPick(crossGroupOppositeGender) ||
-    randomPick(crossGroupAny) ||
+    pickCrossGroupPartner(crossGroupOppositeGender, currentPlayer) ||
+    pickCrossGroupPartner(crossGroupAny, currentPlayer) ||
     ownPartner ||
     players.find((player) => player.id !== currentPlayer.id) ||
     currentPlayer
   );
+}
+
+// 跨組互動時，精確調整第一組玩家「被選中」的機率：
+// - 其他組男生選女生：第一組女生機率為平均值的 60%（下降 40%）
+// - 其他組女生選男生：第一組男生機率為平均值的 130%（上升 30%）
+// 第一組玩家自己選人時，因同組伴侶已被排除，不套用此調整。
+function pickCrossGroupPartner(candidates, currentPlayer) {
+  if (!candidates || candidates.length === 0) return null;
+  if (candidates.length === 1) return candidates[0];
+
+  let firstPairTargetGender = null;
+  let probabilityMultiplier = 1;
+
+  if (currentPlayer.gender === "M") {
+    firstPairTargetGender = "F";
+    probabilityMultiplier = 0.6;
+  } else if (currentPlayer.gender === "F") {
+    firstPairTargetGender = "M";
+    probabilityMultiplier = 1.3;
+  }
+
+  const adjustedTarget = candidates.find(
+    (player) => player.pair === 1 && player.gender === firstPairTargetGender
+  );
+
+  if (!adjustedTarget) return randomPick(candidates);
+
+  const normalProbability = 1 / candidates.length;
+  const adjustedProbability = Math.min(1, normalProbability * probabilityMultiplier);
+
+  if (Math.random() < adjustedProbability) return adjustedTarget;
+
+  const otherCandidates = candidates.filter((player) => player.id !== adjustedTarget.id);
+  return randomPick(otherCandidates) || adjustedTarget;
 }
 
 function generateSpecialCommand(currentPlayer, level) {
