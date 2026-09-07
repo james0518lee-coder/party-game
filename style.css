@@ -593,15 +593,20 @@ button:disabled {
   color: #fee2e2;
 }
 .command-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 2px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
+  margin-top: 6px;
 }
 .command-actions button {
-  font-size: 13px;
-  padding: 6px 14px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 17px;
+  line-height: 1.25;
 }
 .voice-toggle {
   min-width: 118px;
@@ -749,12 +754,14 @@ select:focus-visible {
   }
   .command-actions {
     width: 100%;
-    gap: 7px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
   .command-actions button {
-    flex: 1 1 30%;
-    min-width: 90px;
-    padding: 9px 8px;
+    min-width: 0;
+    min-height: 58px;
+    padding: 10px 6px;
+    font-size: 16px;
   }
 }
 
