@@ -793,3 +793,10 @@ select:focus-visible {
     font-size: 8px;
   }
 }
+
+.command-actions.hidden {
+  display: none;
+}
+#end-actions {
+  margin-top: 10px;
+}

@@ -2,7 +2,7 @@
 // 起點右下角 → 向上8 → 向左8 → 向下8 → 向右6 → 向上6 → 向左4 → 向下4 → 向右2 → 向上2（終點）
 // A/B/C 比例：25% / 45% / 30%
 // 特別格：A 2 個、B 3 個、C 1 個，位置每局隨機，以金色星星表示
-// 指令區：放大字體 + 「完成指令」與「喝一杯」按鈕；連續喝一杯超過 2 次後，只剩完成指令可選，完成指令後重置喝一杯次數
+// 指令區：放大字體 + 「完成指令」與「喝一杯」按鈕；同一位玩家連續喝一杯達上限後，只剩完成指令可選，完成指令後重置該玩家的喝一杯次數
 // 棋子：每位玩家有自己的顏色，圓點上疊加 M/F 字樣表示性別
 
 const BASE_BOARD_SIZE = 9; // 9x9 棋盤
@@ -14,8 +14,10 @@ let currentPlayerIndex = 0;
 let gameOver = false;
 let isRolling = false;
 
-// 喝一杯次數（連續）
-let drinkCount = 0;
+// 喝一杯次數（連續）改記在每位玩家身上：player.drinkCount
+function currentDrinkCount() {
+  return players[currentPlayerIndex]?.drinkCount || 0;
+}
 let waitingForChoice = false;
 let pendingInteractionPair = null;
 let rerollsUsedThisTurn = 0;
@@ -324,11 +326,26 @@ const rerollStatus = document.getElementById("reroll-status");
 const btnDrink = document.getElementById("btn-drink");
 const board = document.getElementById("board");
 const legendDiv = document.getElementById("legend");
+const endActions = document.getElementById("end-actions");
+const btnRestart = document.getElementById("btn-restart");
+const btnNewPlayers = document.getElementById("btn-new-players");
+
+if (btnRestart) {
+  btnRestart.addEventListener("click", () => {
+    if (!gameOver || players.length === 0) return;
+    if (speechEnabled) unlockSpeech(false);
+    startGame();
+  });
+}
+if (btnNewPlayers) {
+  btnNewPlayers.addEventListener("click", () => window.location.reload());
+}
 
 // 綁定指令按鈕事件
 btnConfirmTask.addEventListener("click", () => {
   if (!waitingForChoice || gameOver) return;
-  drinkCount = 0; // 完成指令 → 重置喝一杯次數
+  const finisher = players[currentPlayerIndex];
+  if (finisher) finisher.drinkCount = 0; // 完成指令 → 重置該玩家的喝一杯次數
   waitingForChoice = false;
   if (pendingInteractionPair) {
     recordInteractionPair(pendingInteractionPair.fromId, pendingInteractionPair.toId);
@@ -342,7 +359,8 @@ btnConfirmTask.addEventListener("click", () => {
 
 btnDrink.addEventListener("click", () => {
   if (!waitingForChoice || gameOver) return;
-  drinkCount += 1;
+  const drinker = players[currentPlayerIndex];
+  if (drinker) drinker.drinkCount = (drinker.drinkCount || 0) + 1;
   waitingForChoice = false;
   pendingInteractionPair = null;
   btnConfirmTask.disabled = true;
@@ -494,7 +512,6 @@ function startGame() {
   currentPlayerIndex = 0;
   gameOver = false;
   isRolling = false;
-  drinkCount = 0;
   waitingForChoice = false;
   interactionStats.clear();
   commandDecks.clear();
@@ -507,13 +524,21 @@ function startGame() {
   PATH = buildPathForSize(currentBoardSize);
 
   // commandDB 已由 commands.js 的嵌入題庫完成初始化。
-  players = players.map((p) => ({ ...p, positionIndex: 0 }));
+  players = players.map((p) => ({ ...p, positionIndex: 0, drinkCount: 0 }));
 
   // 每局重新隨機特別格
   assignRandomSpecialTiles();
 
   stepConfirm.classList.add("hidden");
   stepGame.classList.remove("hidden");
+  if (endActions) endActions.classList.add("hidden");
+  board.classList.remove("board-zoom");
+  commandBox.classList.remove(
+    "command-box-interaction",
+    "command-box-special",
+    "command-box-level-C"
+  );
+  if (commandMeta) commandMeta.classList.add("hidden");
 
   renderBoard();
   renderLegend();
@@ -706,7 +731,7 @@ function handleLanding(current) {
 
   waitingForChoice = true;
   btnConfirmTask.disabled = false;
-  btnDrink.disabled = drinkCount >= runtimeRules.maxConsecutiveDrinks;
+  btnDrink.disabled = currentDrinkCount() >= runtimeRules.maxConsecutiveDrinks;
   if (btnReroll) btnReroll.disabled = rerollsUsedThisTurn >= runtimeRules.maxRerollsPerTurn;
   diceFace.disabled = true;
   updateRerollStatus();
@@ -976,6 +1001,18 @@ function applyInteractionScope(text) {
     .replace(/跟\[B\]旁邊的異性換位置/g, "跟[B]換位置");
 }
 
+// 需要多位其他玩家才能進行的題目（蒙眼猜人、輪流…）。
+// 「只跟自己伴侶」模式或只有一對時，文字替換後會不合理，直接不抽。
+function isGroupOnlyCommand(text = "") {
+  return /(所有|其它|其他|全場)異性/.test(text) && /(猜出|輪流)/.test(text);
+}
+
+function withoutGroupOnlyCommands(list) {
+  if (interactionMode !== "partner" && pairCount > 1) return list;
+  const filtered = list.filter((item) => !isGroupOnlyCommand(item.text));
+  return filtered.length > 0 ? filtered : list;
+}
+
 function selectInteractionPartner(currentPlayer) {
   const ownPartner = players.find(
     (player) => player.id !== currentPlayer.id && player.pair === currentPlayer.pair
@@ -1045,7 +1082,7 @@ function generateSpecialCommand(currentPlayer, level) {
       ? db.special
       : defaultSpecialCommands;
 
-  const item = drawCommandFromDeck(rawList, "special", level) || {
+  const item = drawCommandFromDeck(withoutGroupOnlyCommands(rawList), "special", level) || {
     text: "抽一張特別卡，照卡片上的指示做",
     level
   };
@@ -1070,6 +1107,7 @@ function generateNormalCommand(currentPlayer, level) {
 
   let allowedList = rawList.filter((item) => enabledLevels.has(item.level || "A"));
   if (allowedList.length === 0) allowedList = rawList;
+  allowedList = withoutGroupOnlyCommands(allowedList);
 
   const item = drawCommandFromDeck(allowedList, "normal", level) || {
     text: "[A] 說一句祝福的話給在場所有人",
@@ -1078,7 +1116,11 @@ function generateNormalCommand(currentPlayer, level) {
   };
 
   const text = applyInteractionScope(item.text || "");
-  const kind = item.kind === "interaction" ? "interaction" : "self";
+  const hasPlaceholder = text.includes("[A]") || text.includes("[B]");
+  const kind =
+    item.kind === "interaction" && (hasPlaceholder || !isGroupOnlyCommand(item.text))
+      ? "interaction"
+      : "self";
   const commandLevel = item.level || level || "A";
   let finalText = "";
   let partnerId = null;
@@ -1130,6 +1172,7 @@ function handleWin(player) {
   const summaryHtml = buildInteractionSummaryHtml();
   commandTextDiv.innerHTML = "<p>" + escapeHtml(msg) + "</p>" + (summaryHtml || "");
   speakCommand(msg);
+  if (endActions) endActions.classList.remove("hidden");
   return msg;
 }
 
@@ -1286,7 +1329,10 @@ function applyRemoteGameConfig(payload) {
     }));
   }
 
-  if (typeof window.applyRemoteVoiceDefault === "function") {
+  if (
+    typeof window.applyRemoteVoiceDefault === "function" &&
+    typeof rules.voiceDefaultEnabled === "boolean"
+  ) {
     window.applyRemoteVoiceDefault(Boolean(rules.voiceDefaultEnabled));
   }
 
@@ -1314,7 +1360,7 @@ function applyRemoteGameConfig(payload) {
   }
 
   if (waitingForChoice) {
-    btnDrink.disabled = drinkCount >= runtimeRules.maxConsecutiveDrinks;
+    btnDrink.disabled = currentDrinkCount() >= runtimeRules.maxConsecutiveDrinks;
     if (btnReroll) {
       btnReroll.disabled = rerollsUsedThisTurn >= runtimeRules.maxRerollsPerTurn;
     }

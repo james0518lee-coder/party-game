@@ -126,11 +126,13 @@ function updateVoiceButton() {
 }
 
 // 供管理後台即時更新語音預設值。
+// 玩家自己按過語音開關後，以玩家的選擇為準，後台預設值不再覆蓋。
 window.applyRemoteVoiceDefault = function applyRemoteVoiceDefault(enabled) {
-  speechEnabled = Boolean(enabled);
+  if (typeof enabled !== "boolean") return;
   try {
-    localStorage.setItem("partyGameSpeechEnabled", String(speechEnabled));
+    if (localStorage.getItem("partyGameSpeechUserChoice") === "1") return;
   } catch (_) {}
+  speechEnabled = enabled;
   updateVoiceButton();
   if (!speechEnabled && "speechSynthesis" in window) {
     window.speechSynthesis.cancel();
@@ -150,6 +152,7 @@ if (voiceToggleButton) {
     speechEnabled = !speechEnabled;
     try {
       localStorage.setItem("partyGameSpeechEnabled", String(speechEnabled));
+      localStorage.setItem("partyGameSpeechUserChoice", "1");
     } catch (_) {}
     updateVoiceButton();
 

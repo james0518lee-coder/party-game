@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>派對飛行棋</title>
-  <link rel="stylesheet" href="style.css?v=13" />
+  <link rel="stylesheet" href="style.css?v=14" />
 </head>
 <body>
   <div class="app-shell">
@@ -127,6 +127,10 @@
             <button id="btn-drink" disabled>喝一杯</button>
           </div>
           <div id="reroll-status" class="reroll-status" aria-live="polite"></div>
+          <div id="end-actions" class="command-actions hidden">
+            <button id="btn-restart" type="button">再玩一局（同一批玩家）</button>
+            <button id="btn-new-players" class="btn-secondary" type="button">重新設定玩家</button>
+          </div>
         </div>
 
         <details class="map-details">
@@ -148,8 +152,8 @@
   </div>
 
   <script src="commands.js?v=12"></script>
-  <script src="speech.js?v=12"></script>
+  <script src="speech.js?v=13"></script>
   <script src="remote-config.js?v=12"></script>
-  <script src="game.js?v=12"></script>
+  <script src="game.js?v=13"></script>
 </body>
 </html>
